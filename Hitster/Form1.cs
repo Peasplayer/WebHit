@@ -33,7 +33,9 @@ public partial class Form1 : Form
         Controls.Add(handPanel);
 
         for (int i = 0; i < 5; i++)
+        {
             handPanel.Controls.Add(CreateHandCard());
+        }
     }
 
     private Card CreateHandCard()
@@ -43,7 +45,9 @@ public partial class Form1 : Form
         card.Click += (_, _) =>
         {
             if (selectedCard != null)
+            {
                 selectedCard.Deselect(Color.Gold);
+            }
 
             selectedCard = card;
             card.Select();
@@ -55,7 +59,9 @@ public partial class Form1 : Form
     private void OnSlotClicked(int index)
     {
         if (selectedCard == null)
+        {
             return;
+        }
 
         handPanel.Controls.Remove(selectedCard);
         timeline.InsertCard(selectedCard, index);

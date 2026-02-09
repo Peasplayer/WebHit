@@ -2,14 +2,14 @@
 
 public class Timeline
 {
-    private readonly FlowLayoutPanel panel;
-    private readonly List<Card> cards = new();
+    private readonly FlowLayoutPanel panel; //Pannel in dem alles angeordnet wird
+    private readonly List<Card> cards = new(); //Liste mit allen Karten
 
+    //Größe der Karten
     private const int SlotWidth = 30;
     private const int CardSize = 80;
 
-    public event Action<int>? SlotClicked;
-
+    public event Action<int>? SlotClicked; //Übergibt den Index des gecklickten Slots
     public Timeline(Control parent)
     {
         panel = new FlowLayoutPanel
