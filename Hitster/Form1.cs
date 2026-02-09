@@ -2,93 +2,63 @@ namespace Hitster;
 
 public partial class Form1 : Form
 {
-    private FlowLayoutPanel timelinePanel;
+    private Timeline timeline;
+    private FlowLayoutPanel handPanel;
+    private Card selectedCard;
+
     public Form1()
     {
         InitializeComponent();
-        TimeLineContainer();
-        Test();
+        CreateTimeline();
+        CreateHand();
     }
 
-    private void TimeLineContainer()
+    private void CreateTimeline()
     {
-        timelinePanel = new FlowLayoutPanel();
-        timelinePanel.Location = new Point(20, 50);
-        timelinePanel.Size = new Size(800, 160);
-        timelinePanel.BackColor = Color.Green;
-        Controls.Add(timelinePanel);
+        timeline = new Timeline(this);
+        timeline.SlotClicked += OnSlotClicked;
     }
 
-    private void Test()
+    private void CreateHand()
     {
-        int slotWidth = 30;
-        int cardSize = 80;
+        handPanel = new FlowLayoutPanel
+        {
+            Location = new Point(20, 230),
+            Size = new Size(800, 120),
+            BackColor = Color.DarkGray,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false
+        };
+
+        Controls.Add(handPanel);
 
         for (int i = 0; i < 5; i++)
-        {
-            AddSlot(slotWidth, cardSize);
-            AddCard(cardSize);
-        }
-        AddSlot(slotWidth, cardSize);
+            handPanel.Controls.Add(CreateHandCard());
     }
 
-    public void AddSlot(int slotWidth, int cardSize)
+    private Card CreateHandCard()
     {
-        var slot = new Panel
+        var card = new Card(Color.Gold);
+
+        card.Click += (_, _) =>
         {
-            Width = slotWidth,
-            Height = cardSize,
-            BackColor = Color.DeepPink,
-            Margin = new Padding(5)
+            if (selectedCard != null)
+                selectedCard.Deselect(Color.Gold);
+
+            selectedCard = card;
+            card.Select();
         };
-        var animateSlot = false;
-        var diff = cardSize - slotWidth;
-        var steps = 10;
-        var incDiff = diff / steps;
-        var duration = 100;
-        slot.MouseEnter += (s, e) =>
-        {
-            animateSlot = true;
-            var t = Task.Run(() =>
-            {
-                for (int i = 0; i < steps; i++)
-                {
-                    if (animateSlot)
-                    {
-                        slot.Width += incDiff;
-                        Task.Delay(duration / steps).Wait();
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-            });
-        };
-        slot.MouseLeave += (s, e) =>
-        {
-            var steps = (slot.Width - slotWidth) / incDiff;
-            var t = Task.Run(() =>
-            {
-                for (int i = 0; i < steps; i++)
-                {
-                    slot.Width -= incDiff;
-                    Task.Delay(duration / steps).Wait();
-                }
-            });
-            animateSlot = false;
-        };
-        timelinePanel.Controls.Add(slot);
+
+        return card;
     }
-    public void AddCard(int cardSize)
+
+    private void OnSlotClicked(int index)
     {
-        var card = new Panel
-        {
-            Width = cardSize,
-            Height = cardSize,
-            BackColor = Color.BlueViolet,
-            Margin = new Padding(5)
-        };
-        timelinePanel.Controls.Add(card);
+        if (selectedCard == null)
+            return;
+
+        handPanel.Controls.Remove(selectedCard);
+        timeline.InsertCard(selectedCard, index);
+        selectedCard = null;
     }
 }
