@@ -1,4 +1,5 @@
 using Fleck;
+using HitsterServer.MusicData;
 using HitsterServer.Packets;
 using Newtonsoft.Json;
 
@@ -8,7 +9,7 @@ public class GameServer
 {
     public static GameServer Instance { get; private set; }
 
-    public WebSocketServer Server { get; private set; }
+    public WebSocketServer Server { get; }
     public Dictionary<string, ClientData> Clients { get; }
     public int IdCounter { get; private set; }
     public bool GameIsStarted;
@@ -58,7 +59,7 @@ public class GameServer
         Clients.Remove(connection.ConnectionInfo.Id.ToString());
     }
 
-    private void OnMessage(IWebSocketConnection connection, string msg)
+    private async void OnMessage(IWebSocketConnection connection, string msg)
     {
         var client = Clients[connection.ConnectionInfo.Id.ToString()];
         FleckLog.Info($"<{client.Id}> Said: {msg}");
@@ -97,6 +98,18 @@ public class GameServer
                 FleckLog.Info($"<{client.Id}> Name set to: {name}");
                 break;
             }
+            case PacketType.RequestTrack:
+            {
+                // Bereit Antwort-Packet mit zufälligem Song vor
+                var track = await MusicManager.GetRandomTrack();
+                var response = new TrackPacket(track);
+                
+                // Jeder kriegt den Song um an der Runde teilzuhaben
+                SendPacketEveryone(response);
+                
+                FleckLog.Info($"<{client.Id}> got song {track} ({track.ReleaseYear})");
+                break;
+            }
         }
     }
 
@@ -104,6 +117,15 @@ public class GameServer
     {
         var rawPacket = JsonConvert.SerializeObject(packet);
         foreach (var receiver in receivers)
+        {
+            receiver.Connection.Send(rawPacket);
+        }
+    }
+    
+    private void SendPacketEveryone(Packet packet)
+    {
+        var rawPacket = JsonConvert.SerializeObject(packet);
+        foreach (var receiver in Clients.Values)
         {
             receiver.Connection.Send(rawPacket);
         }
