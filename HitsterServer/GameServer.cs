@@ -107,7 +107,7 @@ public class GameServer
                 // Jeder kriegt den Song um an der Runde teilzuhaben
                 SendPacketEveryone(response);
                 
-                FleckLog.Info($"<{client.Id}> got song {track} ({track.ReleaseYear})");
+                FleckLog.Info($"<{client.Id}> got song '{track.Name}' ({track.ReleaseYear})");
                 break;
             }
         }
