@@ -27,20 +27,23 @@ public class Timeline
 
     public void InsertCard(Card card, int index)
     {
+        if (card.IsPlaced)
+            return;
         cards.Insert(index, card);
+        card.MarkAsPlaced();
         Render();
     }
 
     private void Render()
     {
         panel.Controls.Clear();
-
+        
         for (int i = 0; i < cards.Count; i++)
         {
             AddSlot(i);
             panel.Controls.Add(cards[i]);
         }
-
+        
         AddSlot(cards.Count);
     }
 

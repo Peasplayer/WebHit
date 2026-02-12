@@ -46,7 +46,7 @@ public partial class Form1 : Form
         {
             if (selectedCard != null)
             {
-                selectedCard.Deselect(Color.Gold);
+                selectedCard.Deselect();
             }
 
             selectedCard = card;
