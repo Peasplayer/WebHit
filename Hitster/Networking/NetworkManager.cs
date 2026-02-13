@@ -32,17 +32,8 @@ public class NetworkManager
         {
             if (msg.MessageType == WebSocketMessageType.Text && msg.Text != null)
             {
-                Console.WriteLine("MESSAGE:" + msg.Text);
-                // Nachricht wird in Packet umgewandelt
-                var packet = JsonConvert.DeserializeObject<Packet>(msg.Text);
-                if (packet == null)
-                {
-                    Console.WriteLine("Received malformed packet!");
-                    return;
-                }
-                
-                // Packet wird in Task verarbeitet um den Empfänger-Thread nicht zu blockieren
-                //Task.Run(() => HandlePacket(packet));
+                // Nachricht wird in Task verarbeitet um den Empfänger-Thread nicht zu blockieren
+                Task.Run(() => HandlePacket(msg.Text));
             }
         });
         
@@ -50,6 +41,47 @@ public class NetworkManager
         Client.StartOrFail().Wait();
 
         SendPacket(new HandshakePacket(Name));
+    }
+
+    private void HandlePacket(string msg)
+    {
+        Console.WriteLine("MESSAGE:" + msg);
+        
+        // Nachricht wird in Packet umgewandelt
+        var packet = JsonConvert.DeserializeObject<Packet>(msg);
+        if (packet == null)
+        {
+            Console.WriteLine("Received malformed packet!");
+            return;
+        }
+        
+        switch (packet.PacketType)
+        {
+            case PacketType.Handshake:
+            {
+                var handshakePacket = JsonConvert.DeserializeObject<HandshakePacket>(msg);
+                if (handshakePacket == null)
+                {
+                    Console.WriteLine("Received malformed packet!");
+                    return;
+                }
+                
+                Console.WriteLine($"Got name ({handshakePacket.Name}) assigned");
+                break;
+            }
+            case PacketType.Track:
+            {
+                var trackPacket = JsonConvert.DeserializeObject<TrackPacket>(msg);
+                if (trackPacket == null)
+                {
+                    Console.WriteLine("Received malformed packet!");
+                    return;
+                }
+                
+                Console.WriteLine($"Got song ({trackPacket.Track.Name})");
+                break;
+            }
+        }
     }
 
     public void SendPacket(Packet packet) {

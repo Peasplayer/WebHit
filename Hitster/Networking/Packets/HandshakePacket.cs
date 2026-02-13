@@ -4,7 +4,7 @@ public class HandshakePacket : Packet
 {
     public string Name { get; }
 
-    public HandshakePacket(string name)
+    public HandshakePacket(string name) : base(PacketType.Handshake)
     {
         Name = name;
     }

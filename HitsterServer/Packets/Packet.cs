@@ -2,5 +2,10 @@ namespace HitsterServer.Packets;
 
 public class Packet
 {
-    public virtual PacketType PacketType { get; }
+    public PacketType PacketType { get; private set; }
+
+    public Packet(PacketType packetType)
+    {
+        PacketType = packetType;
+    }
 }
