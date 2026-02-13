@@ -1,14 +1,17 @@
 namespace Hitster;
 
-public partial class Form1 : Form
+public partial class Form1 : ResizeForm
 {
     private Timeline timeline;
     private FlowLayoutPanel handPanel;
-    private Card selectedCard;
+    private Card? selectedCard;
 
     public Form1()
     {
         InitializeComponent();
+    }
+    protected override void RenderForm()
+    {
         CreateTimeline();
         CreateHand();
     }
@@ -23,8 +26,8 @@ public partial class Form1 : Form
     {
         handPanel = new FlowLayoutPanel
         {
-            Location = new Point(20, 230),
-            Size = new Size(800, 120),
+            Location = GetLocation(1, 1),
+            Size = GetSize(10, 2),
             BackColor = Color.DarkGray,
             FlowDirection = FlowDirection.LeftToRight,
             WrapContents = false
@@ -34,13 +37,14 @@ public partial class Form1 : Form
 
         for (int i = 0; i < 5; i++)
         {
-            handPanel.Controls.Add(CreateHandCard());
+            handPanel.Controls.Add(CreateHandCard(i));
         }
     }
 
-    private Card CreateHandCard()
+    private Card CreateHandCard(int index)
     {
-        var card = new Card(Color.Gold);
+        var track = new TrackData(index.ToString(), "Song " + (index + 1),"Artist " + (index + 1), "", 1980 + index);
+        var card = new Card(Color.Black, track);
 
         card.Click += (_, _) =>
         {
