@@ -57,7 +57,7 @@ public class Card : Panel
     public void MarkAsPlaced()
     {
         IsPlaced = true;
-        IsSelected = false;
+        Deselect();
         Invalidate();
     }
 

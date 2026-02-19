@@ -9,7 +9,7 @@ public class CardSlot : Panel
 
     public event Action<int>? SlotClicked;
 
-    public CardSlot(int index, int slotWidth, int cardSize)
+    public CardSlot(int index, int slotWidth, int cardSize, bool visible)
     {
         Index = index;
         normalWidth = slotWidth;
@@ -18,11 +18,14 @@ public class CardSlot : Panel
         Width = slotWidth;
         Height = cardSize;
         Margin = new Padding(5);
-        BackColor = Color.DeepPink;
+        BackColor = visible ? Color.DeepPink : Color.Transparent;
 
-        MouseEnter += (_, _) => Expand();
-        MouseLeave += (_, _) => Collapse();
-        Click += (_, _) => SlotClicked?.Invoke(Index);
+        if (visible)
+        {
+            MouseEnter += (_, _) => Expand();
+            MouseLeave += (_, _) => Collapse();
+            Click += (_, _) => SlotClicked?.Invoke(Index);
+        }
     }
 
     private void Expand()

@@ -1,3 +1,5 @@
+using Hitster.Networking;
+
 namespace Hitster;
 
 public partial class Form1 : ResizeForm
@@ -9,10 +11,6 @@ public partial class Form1 : ResizeForm
     public Form1()
     {
         InitializeComponent();
-    }
-
-    protected override void RenderForm()
-    {
         CreateTimeline();
         CreateHand();
     }
@@ -27,44 +25,58 @@ public partial class Form1 : ResizeForm
     {
         handPanel = new FlowLayoutPanel
         {
-            Location = GetLocation(1, 1),
-            Size = GetSize(10, 2),
             BackColor = Color.DarkGray,
             FlowDirection = FlowDirection.LeftToRight,
             WrapContents = false
         };
-
-        Controls.Add(handPanel);
-
-        for (int i = 0; i < 5; i++)
+        handPanel.MouseDoubleClick += (sender, args) =>
         {
-            handPanel.Controls.Add(CreateHandCard(i));
-        }
+            Task.Run(() =>
+            {
+                var watch = System.Diagnostics.Stopwatch.StartNew();
+                var track = NetworkManager.Instance.RequestTrackData();
+                watch.Stop();
+                Console.WriteLine("Track took " + watch.ElapsedMilliseconds + " ms");
+                handPanel.Invoke(() =>
+                {
+                    handPanel.Controls.Add(CreateHandCard(track));
+                });
+            });
+        };
+
+        RegisterResizeControl(handPanel, new Size(10, 2), new Point(1, 4));
+        Controls.Add(handPanel);
     }
 
-    private Card CreateHandCard(int index)
+    private Card CreateHandCard(TrackData track)
     {
-        var track = new TrackData(index.ToString(), "Song " + (index + 1), "Artist " + (index + 1), "", 1980 + index);
         var card = new Card(Color.Black, track);
 
-        card.Click += (_, _) =>
+        void CardOnClick()
         {
             if (card.IsPlaced) return;
 
-            if (selectedCard != null && selectedCard != card)
-                selectedCard.Deselect();
-
             if (selectedCard == card)
             {
+                timeline.ToggleSlots(false);
+                
                 selectedCard.Deselect();
                 selectedCard = null;
             }
             else
             {
+                timeline.ToggleSlots(true);
+                
+                if (selectedCard != null)
+                    selectedCard.Deselect();
+                
                 selectedCard = card;
                 card.Select();
             }
         };
+        
+        card.MouseClick += (_, _) => CardOnClick();
+        card.MouseDoubleClick += (_, _) => CardOnClick();
 
         return card;
     }
@@ -75,6 +87,7 @@ public partial class Form1 : ResizeForm
 
         handPanel.Controls.Remove(selectedCard);
         timeline.InsertCard(selectedCard, index);
+        timeline.ToggleSlots(false);
         selectedCard.MarkAsPlaced();
         selectedCard = null;
     }

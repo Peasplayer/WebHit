@@ -78,7 +78,8 @@ public class NetworkManager
                     return;
                 }
                 
-                Console.WriteLine($"Got song ({trackPacket.Track.Name})");
+                Console.WriteLine($"Got song ({trackPacket.Track.Name}) in conversation ({trackPacket.ConversationId})");
+                _tracks.Add(trackPacket.ConversationId, trackPacket.Track);
                 break;
             }
         }
@@ -86,5 +87,16 @@ public class NetworkManager
 
     public void SendPacket(Packet packet) {
         Client.Send(JsonConvert.SerializeObject(packet));
+    }
+
+    private Dictionary<string, TrackData> _tracks = new ();
+    public TrackData RequestTrackData()
+    {
+        var p = new Packet(PacketType.RequestTrack, null);
+        SendPacket(p);
+        while (!_tracks.ContainsKey(p.ConversationId)) ;
+        var track = _tracks[p.ConversationId];
+        _tracks.Remove(p.ConversationId);
+        return track;
     }
 }

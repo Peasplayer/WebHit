@@ -93,7 +93,7 @@ public class GameServer
                 
                 client.Name = name;
                 
-                SendPacket(new HandshakePacket(name), client);
+                SendPacket(new HandshakePacket(name, rawPacket.ConversationId), client);
                 
                 FleckLog.Info($"<{client.Id}> Name set to: {name}");
                 break;
@@ -102,7 +102,7 @@ public class GameServer
             {
                 // Bereit Antwort-Packet mit zufälligem Song vor
                 var track = await MusicManager.GetRandomTrack();
-                var response = new TrackPacket(track);
+                var response = new TrackPacket(track, rawPacket.ConversationId);
                 
                 // Jeder kriegt den Song um an der Runde teilzuhaben
                 SendPacketEveryone(response);

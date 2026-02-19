@@ -14,8 +14,6 @@ static class Program
         var net = new NetworkManager();
         net.Connect("ws://127.0.0.1:9443", "Dieter");
         
-        net.SendPacket(new Packet(PacketType.RequestTrack));
-        
         // To customize application configuration such as set high DPI settings or default font,
         // see https://aka.ms/applicationconfiguration.
         ApplicationConfiguration.Initialize();
