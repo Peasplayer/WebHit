@@ -9,18 +9,13 @@ public class NetworkManager
 {
     public static NetworkManager Instance { get; private set; }
     
-    public WebsocketClient Client { get; private set; }
+    public WebsocketClient Client { get; }
     public string Name { get; private set; }
 
-    public NetworkManager()
+    public NetworkManager(string address, string name)
     {
         Instance = this;
-    }
-
-    public void Connect(string address, string name)
-    {
         Client = new WebsocketClient(new Uri(address));
-        Name = name;
         
         // Client wird konfiguriert
         Client.IsReconnectionEnabled = false;
@@ -40,7 +35,7 @@ public class NetworkManager
         // Wartet bis die Verbindung hergestellt wurde oder fehlschlägt
         Client.StartOrFail().Wait();
 
-        SendPacket(new HandshakePacket(Name));
+        SendPacket(new HandshakePacket(name));
     }
 
     private void HandlePacket(string msg)
@@ -67,6 +62,7 @@ public class NetworkManager
                 }
                 
                 Console.WriteLine($"Got name ({handshakePacket.Name}) assigned");
+                Name = handshakePacket.Name;
                 break;
             }
             case PacketType.Track:

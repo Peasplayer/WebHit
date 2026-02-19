@@ -1,4 +1,5 @@
 using Hitster.Networking;
+using NAudio.Wave;
 
 namespace Hitster;
 
@@ -6,19 +7,35 @@ public partial class Form1 : ResizeForm
 {
     private Timeline timeline;
     private FlowLayoutPanel handPanel;
-    private Card? selectedCard;
+    private Card? currentCard;
+    private readonly Button _confirmButton;
 
+    private WasapiOut _musicPlayer;
+    
     public Form1()
     {
         InitializeComponent();
-        CreateTimeline();
-        CreateHand();
-    }
-
-    private void CreateTimeline()
-    {
+        
         timeline = new Timeline(this);
         timeline.SlotClicked += OnSlotClicked;
+        
+        CreateHand();
+
+        _confirmButton = new Button { Text = "Confirm", BackColor = Color.DarkGray, Enabled = false };
+        _confirmButton.Click += (_, _) =>
+        {
+            if (currentCard == null) return;
+            
+            if (_musicPlayer != null)
+                _musicPlayer.Stop();
+            
+            currentCard.MarkAsConfirmed();
+            currentCard = null;
+            timeline.ToggleSlots(false);
+            _confirmButton.Enabled = false;
+        };
+        Controls.Add(_confirmButton);
+        RegisterResizeControl(_confirmButton, new Size(2, 2), new Point(1, 7));
     }
 
     private void CreateHand()
@@ -29,7 +46,7 @@ public partial class Form1 : ResizeForm
             FlowDirection = FlowDirection.LeftToRight,
             WrapContents = false
         };
-        handPanel.MouseDoubleClick += (sender, args) =>
+        handPanel.MouseDoubleClick += (_, _) =>
         {
             Task.Run(() =>
             {
@@ -39,8 +56,22 @@ public partial class Form1 : ResizeForm
                 Console.WriteLine("Track took " + watch.ElapsedMilliseconds + " ms");
                 handPanel.Invoke(() =>
                 {
-                    handPanel.Controls.Add(CreateHandCard(track));
+                    timeline.ToggleSlots(true);
+                    var card = new Card(track);
+                    currentCard = card;
+                    handPanel.Controls.Add(card);
                 });
+                
+                using(var mf = new MediaFoundationReader(track.Link))
+                {
+                    _musicPlayer = new WasapiOut();
+                    _musicPlayer.Init(mf);
+                    _musicPlayer.Play();
+                    while (_musicPlayer.PlaybackState == PlaybackState.Playing)
+                    {
+                        Thread.Sleep(1000);
+                    }
+                }
             });
         };
 
@@ -48,47 +79,12 @@ public partial class Form1 : ResizeForm
         Controls.Add(handPanel);
     }
 
-    private Card CreateHandCard(TrackData track)
-    {
-        var card = new Card(Color.Black, track);
-
-        void CardOnClick()
-        {
-            if (card.IsPlaced) return;
-
-            if (selectedCard == card)
-            {
-                timeline.ToggleSlots(false);
-                
-                selectedCard.Deselect();
-                selectedCard = null;
-            }
-            else
-            {
-                timeline.ToggleSlots(true);
-                
-                if (selectedCard != null)
-                    selectedCard.Deselect();
-                
-                selectedCard = card;
-                card.Select();
-            }
-        };
-        
-        card.MouseClick += (_, _) => CardOnClick();
-        card.MouseDoubleClick += (_, _) => CardOnClick();
-
-        return card;
-    }
-
     private void OnSlotClicked(int index)
     {
-        if (selectedCard == null) return;
+        if (currentCard == null) return;
 
-        handPanel.Controls.Remove(selectedCard);
-        timeline.InsertCard(selectedCard, index);
-        timeline.ToggleSlots(false);
-        selectedCard.MarkAsPlaced();
-        selectedCard = null;
+        handPanel.Controls.Remove(currentCard);
+        timeline.InsertCard(currentCard, index);
+        _confirmButton.Enabled = true;
     }
 }

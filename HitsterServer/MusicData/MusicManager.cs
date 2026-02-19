@@ -18,9 +18,8 @@ public class MusicManager
             FleckLog.Debug("Reloading expired track data...");
             using (var client = new HttpClient())
             {
-                var rawApiData = await new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("HitsterServer.json.txt")).ReadToEndAsync();
-                //await client.GetStringAsync("https://api.deezer.com/playlist/14906778801/");
-                //Console.WriteLine(rawApiData);
+                var rawApiData = //await new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("HitsterServer.json.txt")).ReadToEndAsync();
+                await client.GetStringAsync("https://api.deezer.com/playlist/14906778801/");
                 _time = DateTime.Now;
 
                 var rawTrackData = JsonConvert.DeserializeAnonymousType(rawApiData, new

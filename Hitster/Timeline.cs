@@ -28,10 +28,13 @@ public class Timeline
 
     public void InsertCard(Card card, int index)
     {
-        if (card.IsPlaced)
+        if (card.IsConfirmed)
             return;
+        
+        if (cards.Contains(card))
+            cards.Remove(card);
+        
         cards.Insert(index, card);
-        card.MarkAsPlaced();
         Render();
     }
 
