@@ -7,24 +7,45 @@ public sealed class Card : Panel
     public bool IsConfirmed { get; private set; }
     public TrackData Track { get; }
 
-    private TextBox _artist;
-    private TextBox _year;
-    private TextBox _title;
+    private Label _artist;
+    private Label _year;
+    private Label _title;
 
     public Card(TrackData track)
     {
         Track = track;
 
-        Width = Height = 160;
         BackColor = Color.Black;
         BackgroundImage = Image.FromStream(Program.GetResource("Karte.jpg"));
         BackgroundImageLayout = ImageLayout.Zoom;
-        Margin = new Padding(5);
+        Margin = new Padding(5, 0, 5, 0);
         BorderStyle = BorderStyle.FixedSingle;
 
-        _artist = new TextBox();
-        _year = new TextBox();
-        _title = new TextBox();
+        _artist = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.Artist, Visible = false, BackColor = Color.BlueViolet };
+        _year = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.ReleaseYear.ToString(), Visible = false, BackColor = Color.Coral };
+        _title = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.Name, Visible = false, BackColor = Color.BlueViolet };
+        Controls.AddRange(_artist, _year, _title);
+
+        void ResizeLabels()
+        {
+            if (Height == 0 || Width == 0)
+                return;
+            
+            _artist.Location = new Point((int)(Width * 0.05), 0);
+            _artist.Size = new Size((int)(Width * 0.9), (int)(Height * 0.35));
+            _artist.Font = new Font(Program.MontserratSemiBold, (int)(_artist.Size.Height * 0.7 / 3), GraphicsUnit.Pixel);
+
+            _year.Location = new Point((int)(Width * 0.1), (int)(Height * 0.35));
+            _year.Size = new Size((int)(Width * 0.8), (int)(Height * 0.3));
+            _year.Font = new Font(Program.MontserratBold, (int)(_year.Size.Height * 0.9), GraphicsUnit.Pixel);
+
+            _title.Location = new Point((int)(Width * 0.05), (int)(Height * 0.65));
+            _title.Size = new Size((int)(Width * 0.9), (int)(Height * 0.35));
+            _title.Font = new Font(Program.MontserratMediumItalic, (int)(_artist.Size.Height * 0.7 / 3), GraphicsUnit.Pixel);
+        }
+        
+        ResizeLabels();
+        SizeChanged += (_, _) => ResizeLabels();
     }
 
     public void MarkAsConfirmed()
@@ -32,6 +53,9 @@ public sealed class Card : Panel
         IsConfirmed = true;
         BackgroundImage = null;
         BackColor = GetHashColor();
+        _artist.Visible = true;
+        _year.Visible = true;
+        _title.Visible = true;
         Invalidate();
     }
 
@@ -56,72 +80,5 @@ public sealed class Card : Panel
         base.OnPaint(e);
         var g = e.Graphics;
         g.SmoothingMode = SmoothingMode.AntiAlias;
-
-        if (IsConfirmed)
-        {
-            DrawArtist(g);   
-            DrawYear(g);     
-            DrawTitle(g);
-        } 
-    }
-
-    private void DrawArtist(Graphics g)
-    {
-        string text = Track.Artist;
-
-        Font font = new Font(Program.MontserratSemiBold, Width, FontStyle.Bold, GraphicsUnit.Pixel);
-        var ratio = g.MeasureString(text, font);
-
-        font = new Font(Program.MontserratSemiBold,
-            (int)(Width * 0.5 * ratio.Height / ratio.Width),
-            FontStyle.Bold,
-            GraphicsUnit.Pixel);
-
-        SizeF textSize = g.MeasureString(text, font);
-
-        float x = (Width - textSize.Width) / 2;
-        float y = Height * 0.08f;
-
-        g.DrawString(text, font, Brushes.Black, x, y);
-    }
-    
-    private void DrawYear(Graphics g)
-    {
-        string text = Track.ReleaseYear.ToString();
-
-        Font font = new Font(Program.MontserratBold, Width, FontStyle.Bold, GraphicsUnit.Pixel);
-        var ratio = g.MeasureString(text, font);
-
-        font = new Font(Program.MontserratBold,
-            (int)(Width * 0.85 * ratio.Height / ratio.Width), // größer als andere Texte
-            FontStyle.Bold,
-            GraphicsUnit.Pixel);
-
-        SizeF textSize = g.MeasureString(text, font);
-
-        float x = (Width - textSize.Width) / 2;
-        float y = (Height - textSize.Height) / 2;
-
-        g.DrawString(text, font, Brushes.Black, x, y);
-    }
-    
-    private void DrawTitle(Graphics g)
-    {
-        string text = Track.Name;
-
-        Font font = new Font(Program.MontserratMediumItalic, Width, FontStyle.Regular, GraphicsUnit.Pixel);
-        var ratio = g.MeasureString(text, font);
-
-        font = new Font(Program.MontserratMediumItalic,
-            (int)(Width * 0.55 * ratio.Height / ratio.Width),
-            FontStyle.Regular,
-            GraphicsUnit.Pixel);
-
-        SizeF textSize = g.MeasureString(text, font);
-
-        float x = (Width - textSize.Width) / 2;
-        float y = Height - textSize.Height - Height * 0.08f;
-
-        g.DrawString(text, font, Brushes.Black, x, y);
     }
 }

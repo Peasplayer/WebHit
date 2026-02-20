@@ -16,8 +16,10 @@ public partial class Form1 : ResizeForm
     {
         InitializeComponent();
         
-        timeline = new Timeline(this);
+        timeline = new Timeline();
         timeline.SlotClicked += OnSlotClicked;
+        RegisterResizeControl(timeline.panel, new Size(30, 3), new Point(1, 1));
+        Controls.Add(timeline.panel);
         
         CreateHand();
 
@@ -60,6 +62,7 @@ public partial class Form1 : ResizeForm
                     var card = new Card(track);
                     currentCard = card;
                     handPanel.Controls.Add(card);
+                    RegisterResizeControl(card, new SizeF(3f, 3f), new Point());
                 });
                 
                 using(var mf = new MediaFoundationReader(track.Link))

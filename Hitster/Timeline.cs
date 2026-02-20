@@ -2,7 +2,7 @@
 
 public class Timeline
 {
-    private readonly FlowLayoutPanel panel; //Pannel in dem alles angeordnet wird
+    public readonly FlowLayoutPanel panel; //Pannel in dem alles angeordnet wird
     private readonly List<Card> cards = new(); //Liste mit allen Karten
 
     //Größe der Karten
@@ -12,7 +12,7 @@ public class Timeline
     private bool SlotsVisible;
 
     public event Action<int>? SlotClicked; //Übergibt den Index des gecklickten Slots
-    public Timeline(ResizeForm parent)
+    public Timeline()
     {
         panel = new FlowLayoutPanel
         {
@@ -21,8 +21,6 @@ public class Timeline
             WrapContents = false,
         };
 
-        parent.RegisterResizeControl(panel, new Size(10, 2), new Point(1, 1));
-        parent.Controls.Add(panel);
         Render();
     }
 
@@ -67,8 +65,18 @@ public class Timeline
 
     private void AddSlot(int index)
     {
-        var slot = new CardSlot(index, SlotWidth, CardSize, SlotsVisible);
-        slot.SlotClicked += i => SlotClicked?.Invoke(i);
+        var slot = new Panel
+        {
+            Height = (int)(panel.Height * 0.9),
+            Width = (int)(panel.Width / 60f),
+            Margin = new Padding(0, (int)(panel.Height * 0.05), 0, (int)(panel.Height * 0.05)),
+            BackColor = Color.DeepPink
+        };
+        
+        slot.Click += (_, _) =>
+        {
+            SlotClicked?.Invoke(index);
+        };
         panel.Controls.Add(slot);
     }
 }
