@@ -28,12 +28,15 @@ public class Timeline
 
     public void InsertCard(Card card, int index)
     {
-        if (card.IsConfirmed)
-            return;
-        
         if (cards.Contains(card))
             cards.Remove(card);
-        
+
+        if (index < 0)
+            index = 0;
+
+        if (index > cards.Count)
+            index = cards.Count;
+
         cards.Insert(index, card);
         Render();
     }
