@@ -1,9 +1,8 @@
 ﻿namespace Hitster;
 
-public class Timeline
+public class Timeline : FlowLayoutPanel
 {
-    public readonly FlowLayoutPanel panel; //Pannel in dem alles angeordnet wird
-    private readonly List<Card> cards = new(); //Liste mit allen Karten
+    private readonly List<Card> _cards = new(); //Liste mit allen Karten
 
     //Größe der Karten
     private const int SlotWidth = 30;
@@ -14,13 +13,12 @@ public class Timeline
     public event Action<int>? SlotClicked; //Übergibt den Index des gecklickten Slots
     public Timeline()
     {
-        panel = new FlowLayoutPanel
-        {
-            BackColor = Color.Green,
-            FlowDirection = FlowDirection.LeftToRight,
-            WrapContents = false,
-        };
+        BackColor = Color.Green;
+        FlowDirection = FlowDirection.LeftToRight;
+        WrapContents = false;
 
+        SizeChanged += (_, _) => Render();
+        Invalidated += (_, _) => Render();
         Render();
     }
 
@@ -29,10 +27,15 @@ public class Timeline
         if (card.IsConfirmed)
             return;
         
-        if (cards.Contains(card))
-            cards.Remove(card);
+        if (_cards.Contains(card))
+            _cards.Remove(card);
         
-        cards.Insert(index, card);
+        Console.WriteLine(index + " - " + _cards.Count);
+        if (index >= _cards.Count)
+            _cards.Add(card);
+        else
+            _cards.Insert(index, card);
+        
         Render();
     }
 
@@ -44,39 +47,47 @@ public class Timeline
 
     private void Render()
     {
-        panel.Controls.Clear();
-        
-        for (int i = 0; i < cards.Count; i++)
+        Controls.Clear();
+
+        var contentWidth = 0;
+        for (int i = 0; i < _cards.Count; i++)
         {
-            AddSlot(i);
-            panel.Controls.Add(cards[i]);
+            var card = _cards[i];
+            if (i == 0)
+            {
+                var firstSlot = CreateSlot(0);
+                firstSlot.Enabled = card.IsConfirmed;
+                contentWidth += firstSlot.Width;
+            }
+                
+            Controls.Add(card);
+            contentWidth += card.Width;
+
+            var slot = CreateSlot(i + 1);
+            slot.Enabled = card.IsConfirmed && (i + 1 == _cards.Count || _cards[i + 1].IsConfirmed);
+            contentWidth += slot.Width;
         }
-        
-        AddSlot(cards.Count);
 
         var width = 0;
-        for (int i = 0; i < panel.Controls.Count; i++)
+        for (int i = 0; i < Controls.Count; i++)
         {
-            var c = panel.Controls[i];
+            var c = Controls[i];
             width += c.Width + c.Margin.Horizontal;
         }
-        panel.Padding = new Padding((panel.Width - width) / 2, 0, (panel.Width - width) / 2, 0);
+        Padding = new Padding((Width - width) / 2, 0, (Width - width) / 2, 0);
     }
 
-    private void AddSlot(int index)
+    private Panel CreateSlot(int index)
     {
         var slot = new Panel
         {
-            Height = (int)(panel.Height * 0.9),
-            Width = (int)(panel.Width / 60f),
-            Margin = new Padding(0, (int)(panel.Height * 0.05), 0, (int)(panel.Height * 0.05)),
-            BackColor = Color.DeepPink
+            Height = Height,
+            Width = (int)(Width / 60f),
+            BackColor = Color.DeepPink,
+            Tag = index
         };
-        
-        slot.Click += (_, _) =>
-        {
-            SlotClicked?.Invoke(index);
-        };
-        panel.Controls.Add(slot);
+        slot.Click += (_, _) => SlotClicked?.Invoke(index);
+        Controls.Add(slot);
+        return slot;
     }
 }

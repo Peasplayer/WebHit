@@ -18,12 +18,11 @@ public sealed class Card : Panel
         BackColor = Color.Black;
         BackgroundImage = Image.FromStream(Program.GetResource("Karte.jpg"));
         BackgroundImageLayout = ImageLayout.Zoom;
-        Margin = new Padding(5, 0, 5, 0);
         BorderStyle = BorderStyle.FixedSingle;
 
-        _artist = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.Artist, Visible = false, BackColor = Color.BlueViolet };
-        _year = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.ReleaseYear.ToString(), Visible = false, BackColor = Color.Coral };
-        _title = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.Name, Visible = false, BackColor = Color.BlueViolet };
+        _artist = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.Artist, Visible = false };
+        _year = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.ReleaseYear.ToString(), Visible = false };
+        _title = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.Name, Visible = false };
         Controls.AddRange(_artist, _year, _title);
 
         void ResizeLabels()
