@@ -22,21 +22,9 @@ public class CardSlot : Panel
 
         if (visible)
         {
-            MouseEnter += (_, _) => Expand();
-            MouseLeave += (_, _) => Collapse();
+            MouseEnter += (_, _) => BackColor = Color.Orange;
+            MouseLeave += (_, _) => BackColor = Color.DeepPink;
             Click += (_, _) => SlotClicked?.Invoke(Index);
         }
-    }
-
-    private void Expand()
-    {
-        Width = expandedWidth;
-        BackColor = Color.Orange;
-    }
-
-    private void Collapse()
-    {
-        Width = normalWidth;
-        BackColor = Color.DeepPink;
     }
 }
