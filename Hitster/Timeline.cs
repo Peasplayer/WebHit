@@ -1,43 +1,40 @@
 ﻿namespace Hitster;
 
-public class Timeline
+public class Timeline : Panel
 {
-    private readonly FlowLayoutPanel panel; //Pannel in dem alles angeordnet wird
-    private readonly List<Card> cards = new(); //Liste mit allen Karten
-
-    //Größe der Karten
-    private const int SlotWidth = 30;
-    private const int CardSize = 80;
-
+    private readonly List<Card> _cards = new();
+    private readonly List<CardSlot> _activeSlots = new();
     private bool SlotsVisible;
 
-    public event Action<int>? SlotClicked; //Übergibt den Index des gecklickten Slots
-    public Timeline(ResizeForm parent)
-    {
-        panel = new FlowLayoutPanel
-        {
-            BackColor = Color.Green,
-            FlowDirection = FlowDirection.LeftToRight,
-            WrapContents = false,
-        };
+    public event Action<int>? SlotClicked;
 
-        parent.RegisterResizeControl(panel, new Size(10, 2), new Point(1, 1));
-        parent.Controls.Add(panel);
+    public Timeline()
+    {
+        BackColor = Color.Green;
+        SizeChanged += (_, _) => Render();
+        ParentChanged += (_, _) => Render(); 
         Render();
     }
 
     public void InsertCard(Card card, int index)
     {
-        if (cards.Contains(card))
-            cards.Remove(card);
+        if (card.IsConfirmed)
+            return;
+        
+        if (_cards.Contains(card))
+            _cards.Remove(card);
+        
+        if (index >= _cards.Count)
+            _cards.Add(card);
+        else
+            _cards.Insert(index, card);
+        card.SizeChanged -= OnCardSizeChanged; 
+        card.SizeChanged += OnCardSizeChanged;
+        Render();
+    }
 
-        if (index < 0)
-            index = 0;
-
-        if (index > cards.Count)
-            index = cards.Count;
-
-        cards.Insert(index, card);
+    private void OnCardSizeChanged(object? sender, EventArgs e)
+    {
         Render();
     }
 
@@ -49,29 +46,62 @@ public class Timeline
 
     private void Render()
     {
-        panel.Controls.Clear();
+        Controls.Clear();
         
-        for (int i = 0; i < cards.Count; i++)
+        if (Parent != null)
         {
-            AddSlot(i);
-            panel.Controls.Add(cards[i]);
+            foreach (var slot in _activeSlots)
+            {
+                Parent.Controls.Remove(slot);
+                slot.Dispose();
+            }
+            _activeSlots.Clear();
         }
+
+        if (Width == 0 || Height == 0) 
+        {
+            return;
+        }
+
+        int cardWidth = _cards.Count > 0 ? _cards[0].Width : 80;
+        int cardHeight = _cards.Count > 0 ? _cards[0].Height : 120;
+
+        int gap = 0; //Kein Abstand zwoschen den Karten
+        int totalContentWidth = (_cards.Count * cardWidth) + (Math.Max(0, _cards.Count - 1) * gap);
         
-        AddSlot(cards.Count);
+        int startX = (Width - totalContentWidth) / 2;
+        int cardY = (Height - cardHeight) / 2;
 
-        var width = 0;
-        for (int i = 0; i < panel.Controls.Count; i++)
+        for (int i = 0; i <= _cards.Count; i++)
         {
-            var c = panel.Controls[i];
-            width += c.Width + c.Margin.Horizontal;
-        }
-        panel.Padding = new Padding((panel.Width - width) / 2, 0, (panel.Width - width) / 2, 0);
-    }
+            int slotCenterX;
+            if (i == 0) slotCenterX = startX - gap / 2;
+            else if (i == _cards.Count) slotCenterX = startX + totalContentWidth + gap / 2;
+            else slotCenterX = startX + (i * cardWidth) + ((i - 1) * gap) + gap / 2;
 
-    private void AddSlot(int index)
-    {
-        var slot = new CardSlot(index, SlotWidth, CardSize, SlotsVisible);
-        slot.SlotClicked += i => SlotClicked?.Invoke(i);
-        panel.Controls.Add(slot);
+            if (SlotsVisible && Parent != null)
+            {
+                bool isEnabled = false;
+                if (_cards.Count == 0) isEnabled = true;
+                else if (i == 0) isEnabled = _cards[0].IsConfirmed;
+                else if (i == _cards.Count) isEnabled = _cards[i - 1].IsConfirmed;
+                else isEnabled = _cards[i - 1].IsConfirmed && _cards[i].IsConfirmed;
+                var slot = new CardSlot(i, 30, cardWidth, isEnabled);
+                slot.SlotClicked += (index) => SlotClicked?.Invoke(index);
+                int slotX = this.Location.X + slotCenterX - (slot.Width / 2);
+                int slotY = this.Location.Y - slot.Height - 10; 
+                slot.Location = new Point(slotX, slotY);
+                _activeSlots.Add(slot);
+                Parent.Controls.Add(slot);
+                slot.BringToFront(); 
+            }
+
+            if (i < _cards.Count)
+            {
+                var card = _cards[i];
+                card.Location = new Point(startX + i * (cardWidth + gap), cardY);
+                Controls.Add(card);
+            }
+        }
     }
 }

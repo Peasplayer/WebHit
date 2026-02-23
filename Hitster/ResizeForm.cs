@@ -57,19 +57,21 @@ public abstract class ResizeForm : Form
         }
     }
 
-    public void RegisterResizeControl(Control control, Size size, Point location)
+    public void RegisterResizeControl(Control control, SizeF size, PointF location)
     {
         var c = new ResizeControl(control, size, location);
+        c.Control.Size = GetSize(c.Size);
+        c.Control.Location = GetLocation(c.Location);
         _resizeControls.Add(c);
     }
     
-    private Size GetSize(Size size)
+    private Size GetSize(SizeF size)
     {
-        return new Size(size.Width * widthUnit, size.Height * heightUnit);
+        return new Size((int)(size.Width * widthUnit), (int)(size.Height * heightUnit));
     }
 
-    private Point GetLocation(Point location)
+    private Point GetLocation(PointF location)
     {
-        return new Point(_container.X + location.X * widthUnit, _container.Y + location.Y * heightUnit);
+        return new Point((int)(_container.X + location.X * widthUnit), (int)(_container.Y + location.Y * heightUnit));
     }
 }

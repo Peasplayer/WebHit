@@ -16,8 +16,26 @@ public partial class Form1 : ResizeForm
     {
         InitializeComponent();
         
-        timeline = new Timeline(this);
+        timeline = new Timeline();
         timeline.SlotClicked += OnSlotClicked;
+        RegisterResizeControl(timeline, new Size(30, 3), new Point(1, 1));
+        Controls.Add(timeline);
+        Task.Run(() =>
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            var track = NetworkManager.Instance.RequestTrackData();
+            watch.Stop();
+            Console.WriteLine("Track took " + watch.ElapsedMilliseconds + " ms");
+            timeline.Invoke(() =>
+            {
+                timeline.ToggleSlots(true);
+                var card = new Card(track);
+                timeline.InsertCard(card, 0);
+                card.MarkAsConfirmed();
+                timeline.Invalidate();
+                RegisterResizeControl(card, new SizeF(3f, 3f), new Point());
+            });
+        });
         
         CreateHand();
 
@@ -60,6 +78,7 @@ public partial class Form1 : ResizeForm
                     var card = new Card(track);
                     currentCard = card;
                     handPanel.Controls.Add(card);
+                    RegisterResizeControl(card, new SizeF(3f, 3f), new Point());
                 });
                 
                 using(var mf = new MediaFoundationReader(track.Link))

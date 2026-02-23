@@ -3,10 +3,10 @@ namespace Hitster;
 public struct ResizeControl
 {
     public Control Control { get; }
-    public Size Size { get; set; }
-    public Point Location { get; set; }
+    public SizeF Size { get; set; }
+    public PointF Location { get; set; }
     
-    public ResizeControl(Control control, Size size, Point location)
+    public ResizeControl(Control control, SizeF size, PointF location)
     {
         Control = control;
         Size = size;
