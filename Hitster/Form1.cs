@@ -33,7 +33,7 @@ public partial class Form1 : ResizeForm
                 timeline.InsertCard(card, 0);
                 card.MarkAsConfirmed();
                 timeline.Invalidate();
-                RegisterResizeControl(card, new SizeF(3f, 3f), new Point());
+                RegisterResizeControl(card, new SizeF(3f, 3f));
             });
         });
         
@@ -78,7 +78,7 @@ public partial class Form1 : ResizeForm
                     var card = new Card(track);
                     currentCard = card;
                     handPanel.Controls.Add(card);
-                    RegisterResizeControl(card, new SizeF(3f, 3f), new Point());
+                    RegisterResizeControl(card, new SizeF(3f, 3f));
                 });
                 
                 using(var mf = new MediaFoundationReader(track.Link))

@@ -82,6 +82,8 @@ public class MusicManager
             if (mbTries++ <= 5)
                 goto A;
 
+            FleckLog.Error($"Error whilst getting random track ${randomTrack.Name} - {randomTrack.Artist}");
+            
             throw;
         }
         
