@@ -65,16 +65,14 @@ public class MusicManager
                 client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("WebHit-Test", "0.0.1"));
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                var query = Uri.EscapeDataString(
-                    $"artistname:\"{randomTrack.Artist}\"ANDrecording:\"{randomTrack.Name}\"ANDstatus:\"official\"type:\"single\"");
-                Console.WriteLine(query);
-                var mbRes = JsonConvert.DeserializeAnonymousType(await client.GetStringAsync(
-                    "https://musicbrainz.org/ws/2/recording?query="
-                    + query + "&fmt=json&limit=25"), new { recordings = Array.Empty<MbRecording>() });
-
-                var releaseYears = mbRes.recordings.ToList().ConvertAll(r =>
-                    r.FirstRelease == null ? int.MaxValue : Convert.ToInt32(r.FirstRelease.Split("-")[0]));
+                
+                var dcRes = JsonConvert.DeserializeAnonymousType(await client.GetStringAsync(
+                    $"https://api.discogs.com/database/search?artist={randomTrack.Artist}" +
+                    $"&release_title={randomTrack.Name}&per_page=10"), 
+                    new { results = Array.Empty<DcResults>() });
+                
+                var releaseYears = dcRes.results.ToList().ConvertAll(r =>
+                    r.Year == null ? int.MaxValue : Convert.ToInt32(r.Year));
                 releaseYears.Sort();
                 randomTrack.ReleaseYear = releaseYears[0];
             }
@@ -84,6 +82,8 @@ public class MusicManager
             if (mbTries++ <= 5)
                 goto A;
 
+            FleckLog.Error($"Error whilst getting random track ${randomTrack.Name} - {randomTrack.Artist}");
+            
             throw;
         }
         
@@ -91,9 +91,9 @@ public class MusicManager
         return randomTrack;
     }
     
-    private struct MbRecording
+    private struct DcResults
     {
-        [JsonProperty("first-release-date")]
-        public string? FirstRelease;
+        [JsonProperty("year")]
+        public string? Year;
     }
 }

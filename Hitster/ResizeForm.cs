@@ -53,15 +53,17 @@ public abstract class ResizeForm : Form
         foreach (var c in _resizeControls)
         {
             c.Control.Size = GetSize(c.Size);
-            c.Control.Location = GetLocation(c.Location);
+            if (c.Location != null)
+                c.Control.Location = GetLocation(c.Location.Value);
         }
     }
 
-    public void RegisterResizeControl(Control control, SizeF size, PointF location)
+    public void RegisterResizeControl(Control control, SizeF size, PointF? location = null)
     {
         var c = new ResizeControl(control, size, location);
         c.Control.Size = GetSize(c.Size);
-        c.Control.Location = GetLocation(c.Location);
+        if (c.Location != null)
+            c.Control.Location = GetLocation(c.Location.Value);
         _resizeControls.Add(c);
     }
     
@@ -73,5 +75,19 @@ public abstract class ResizeForm : Form
     private Point GetLocation(PointF location)
     {
         return new Point((int)(_container.X + location.X * widthUnit), (int)(_container.Y + location.Y * heightUnit));
+    }
+    
+    private struct ResizeControl
+    {
+        public Control Control { get; }
+        public SizeF Size { get; set; }
+        public PointF? Location { get; set; }
+    
+        public ResizeControl(Control control, SizeF size, PointF? location = null)
+        {
+            Control = control;
+            Size = size;
+            Location = location;
+        }
     }
 }

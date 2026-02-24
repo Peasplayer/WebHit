@@ -7,12 +7,32 @@ public class Timeline : Panel
     private bool SlotsVisible;
 
     public event Action<int>? SlotClicked;
+    
+    public event Action? Resized;
 
     public Timeline()
     {
         BackColor = Color.Green;
-        SizeChanged += (_, _) => Render();
-        ParentChanged += (_, _) => Render(); 
+        /*SizeChanged += (_, _) =>
+        {
+            Console.WriteLine(DateTime.Now.ToLongTimeString() + " Timeline SizeChanged");
+            Render();
+        };
+        ParentChanged += (_, _) =>
+        {
+            Console.WriteLine(DateTime.Now.ToLongTimeString() + " Timeline ParentChanged");
+            Render();
+        };*/
+        Resized += () =>
+        {
+            Console.WriteLine(DateTime.Now.ToLongTimeString() + " Timeline Resized");
+            Render();
+        };
+        Click += (_, _) =>
+        {
+            Console.WriteLine(DateTime.Now.ToLongTimeString() + " Timeline Click");
+            Render();
+        };
         Render();
     }
 
@@ -28,13 +48,15 @@ public class Timeline : Panel
             _cards.Add(card);
         else
             _cards.Insert(index, card);
-        card.SizeChanged -= OnCardSizeChanged; 
-        card.SizeChanged += OnCardSizeChanged;
+        //card.SizeChanged -= OnCardSizeChanged; 
+        //card.SizeChanged += OnCardSizeChanged;
+        Console.WriteLine(DateTime.Now.ToLongTimeString() + " Timeline InsertCard");
         Render();
     }
 
     private void OnCardSizeChanged(object? sender, EventArgs e)
     {
+        Console.WriteLine(DateTime.Now.ToLongTimeString() + " Timeline OnCardSizeChanged");
         Render();
     }
 
@@ -46,6 +68,7 @@ public class Timeline : Panel
 
     private void Render()
     {
+        Console.WriteLine(DateTime.Now.ToLongTimeString() + " Timeline Render");
         Controls.Clear();
         
         if (Parent != null)
@@ -62,8 +85,17 @@ public class Timeline : Panel
         {
             return;
         }
+        
+        var totalWidth = _cards.Sum(card => card.Width);
+        var startX = (Width - totalWidth) / 2;
 
-        int cardWidth = _cards.Count > 0 ? _cards[0].Width : 80;
+        foreach (var card in _cards)
+        {
+            card.Location = new Point(startX + card.Width * _cards.IndexOf(card), 0);
+            Controls.Add(card);
+        }
+
+        /*int cardWidth = _cards.Count > 0 ? _cards[0].Width : 80;
         int cardHeight = _cards.Count > 0 ? _cards[0].Height : 120;
 
         int gap = 0; //Kein Abstand zwoschen den Karten
@@ -99,9 +131,9 @@ public class Timeline : Panel
             if (i < _cards.Count)
             {
                 var card = _cards[i];
-                card.Location = new Point(startX + i * (cardWidth + gap), cardY);
+                card.Location = new Point(startX + i * (cardWidth + gap), 0);
                 Controls.Add(card);
             }
-        }
+        }*/
     }
 }
