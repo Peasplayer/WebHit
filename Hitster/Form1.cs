@@ -18,7 +18,7 @@ public partial class Form1 : ResizeForm
         
         timeline = new Timeline();
         timeline.SlotClicked += OnSlotClicked;
-        RegisterResizeControl(timeline, new Size(30, 3), new Point(1, 1));
+        RegisterResizeControl(timeline, new Size(30, 3), new Point(1, 1), timeline.AfterResize);
         Controls.Add(timeline);
         Task.Run(() =>
         {

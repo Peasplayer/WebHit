@@ -7,32 +7,10 @@ public class Timeline : Panel
     private bool SlotsVisible;
 
     public event Action<int>? SlotClicked;
-    
-    public event Action? Resized;
 
     public Timeline()
     {
         BackColor = Color.Green;
-        /*SizeChanged += (_, _) =>
-        {
-            Console.WriteLine(DateTime.Now.ToLongTimeString() + " Timeline SizeChanged");
-            Render();
-        };
-        ParentChanged += (_, _) =>
-        {
-            Console.WriteLine(DateTime.Now.ToLongTimeString() + " Timeline ParentChanged");
-            Render();
-        };*/
-        Resized += () =>
-        {
-            Console.WriteLine(DateTime.Now.ToLongTimeString() + " Timeline Resized");
-            Render();
-        };
-        Click += (_, _) =>
-        {
-            Console.WriteLine(DateTime.Now.ToLongTimeString() + " Timeline Click");
-            Render();
-        };
         Render();
     }
 
@@ -48,15 +26,12 @@ public class Timeline : Panel
             _cards.Add(card);
         else
             _cards.Insert(index, card);
-        //card.SizeChanged -= OnCardSizeChanged; 
-        //card.SizeChanged += OnCardSizeChanged;
-        Console.WriteLine(DateTime.Now.ToLongTimeString() + " Timeline InsertCard");
+        
         Render();
     }
 
-    private void OnCardSizeChanged(object? sender, EventArgs e)
+    public void AfterResize()
     {
-        Console.WriteLine(DateTime.Now.ToLongTimeString() + " Timeline OnCardSizeChanged");
         Render();
     }
 
@@ -68,7 +43,6 @@ public class Timeline : Panel
 
     private void Render()
     {
-        Console.WriteLine(DateTime.Now.ToLongTimeString() + " Timeline Render");
         Controls.Clear();
         
         if (Parent != null)

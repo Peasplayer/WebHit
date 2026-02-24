@@ -54,6 +54,8 @@ public class MusicManager
         {
             randomTrack = tracks[Random.Shared.Next(tracks.Length)];
         }
+        
+        FleckLog.Info($"Random Track: {randomTrack.Artist} - {randomTrack.Name}");
 
         var mbTries = 0;
         A:
