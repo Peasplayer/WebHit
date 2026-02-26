@@ -37,8 +37,18 @@ public partial class Form1 : ResizeForm
         });
         
         CreateHand();
+        
+        _confirmButton = new Button
+        {
+            BackgroundImageLayout = ImageLayout.Zoom,
+            FlatStyle = FlatStyle.Flat,
+            BackColor = Color.Transparent,
+            Cursor =  Cursors.Hand,
+        };
+        
+        using var stream = Program.GetResource("Gruener_Harken.jpg");
+        _confirmButton.BackgroundImage = Image.FromStream(stream);
 
-        _confirmButton = new Button { Text = "Confirm", BackColor = Color.DarkGray, Enabled = false };
         _confirmButton.Click += (_, _) =>
         {
             if (currentCard == null) return;
