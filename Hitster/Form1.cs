@@ -18,7 +18,7 @@ public partial class Form1 : ResizeForm
         
         timeline = new Timeline();
         timeline.SlotClicked += OnSlotClicked;
-        RegisterResizeControl(timeline, new Size(30, 3), new Point(1, 1), timeline.AfterResize);
+        RegisterResizeControl(timeline, new SizeF(30, 3.5f), new PointF(1, 1), timeline.AfterResize);
         Controls.Add(timeline);
         Task.Run(() =>
         {
@@ -28,7 +28,6 @@ public partial class Form1 : ResizeForm
             Console.WriteLine("Track took " + watch.ElapsedMilliseconds + " ms");
             timeline.Invoke(() =>
             {
-                timeline.ToggleSlots(true);
                 var card = new Card(track);
                 timeline.InsertCard(card, 0);
                 card.MarkAsConfirmed();

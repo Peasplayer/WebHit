@@ -31,14 +31,15 @@ public sealed class Card : Panel
                 return;
 
             var smallSize = new Size((int)(Width * 0.9), (int)(Height * 0.35));
-            var smallFontSize = (int)(_artist.Size.Height * 0.7 / 3);
+            var smallFontSize = (int)(smallSize.Height * 0.7 / 3);
             if (smallFontSize == 0)
                 return;
             
             _artist.Location = new Point((int)(Width * 0.05), 0);
             _title.Location = new Point((int)(Width * 0.05), (int)(Height * 0.65));
             _artist.Size = _title.Size = smallSize;
-            _artist.Font = _title.Font = new Font(Program.MontserratSemiBold, smallFontSize, GraphicsUnit.Pixel);
+            _artist.Font = new Font(Program.MontserratSemiBold, smallFontSize, GraphicsUnit.Pixel);
+            _title.Font = new Font(Program.MontserratMediumItalic, smallFontSize, GraphicsUnit.Pixel);
 
             _year.Location = new Point((int)(Width * 0.1), (int)(Height * 0.35));
             _year.Size = new Size((int)(Width * 0.8), (int)(Height * 0.3));
