@@ -57,33 +57,36 @@ public class MusicManager
         
         FleckLog.Info($"Random Track: {randomTrack.Artist} - {randomTrack.Name}");
 
-        var mbTries = 0;
-        A:
         try
         {
-            using (var client = new HttpClient())
-            {
-                client.DefaultRequestHeaders.UserAgent.Clear();
-                client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("WebHit-Test", "0.0.1"));
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                
-                var dcRes = JsonConvert.DeserializeAnonymousType(await client.GetStringAsync(
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.UserAgent.Clear();
+            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("WebHit-Test", "0.0.1"));
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            
+            var response = JsonConvert.DeserializeAnonymousType(await client.GetStringAsync(
                     $"https://api.discogs.com/database/search?artist={randomTrack.Artist}" +
                     $"&release_title={randomTrack.Name}&per_page=10"), 
+                new { results = Array.Empty<DcResults>() });
+                
+            var releaseYears = response.results.ToList().ConvertAll(r =>
+                r.Year == null ? int.MaxValue : Convert.ToInt32(r.Year));
+            if (releaseYears.Count == 0)
+            {
+                response = JsonConvert.DeserializeAnonymousType(await client.GetStringAsync(
+                        $"https://api.discogs.com/database/search?query={randomTrack.Artist} - {randomTrack.Name}&per_page=10"), 
                     new { results = Array.Empty<DcResults>() });
                 
-                var releaseYears = dcRes.results.ToList().ConvertAll(r =>
+                releaseYears = response.results.ToList().ConvertAll(r =>
                     r.Year == null ? int.MaxValue : Convert.ToInt32(r.Year));
-                releaseYears.Sort();
-                randomTrack.ReleaseYear = releaseYears[0];
             }
+            
+            releaseYears.Sort();
+            randomTrack.ReleaseYear = releaseYears[0];
         }
-        catch (HttpRequestException e)
+        catch (HttpRequestException _)
         {
-            if (mbTries++ <= 5)
-                goto A;
-
             FleckLog.Error($"Error whilst getting random track ${randomTrack.Name} - {randomTrack.Artist}");
             
             throw;
