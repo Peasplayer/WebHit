@@ -68,13 +68,18 @@ public sealed class Card : Panel
         {
             hash = c + ((hash << 5) - hash);
         }
-        var color = "#";
+        var colorStr = "#";
         for (var i = 0; i < 3; i++)
         {
             var value = (hash >> (i * 8)) & 0xff;
-            color += Convert.ToString(value, 16).PadLeft(2, '0');
+            colorStr += Convert.ToString(value, 16).PadLeft(2, '0');
         }
-        return ColorTranslator.FromHtml(color);
+        
+        var color = ColorTranslator.FromHtml(colorStr);
+        if (color.GetBrightness() < 0.4f)
+            color = Color.FromArgb(color.A, 255 - color.R, 255 - color.G, 255 - color.B);
+
+        return color;
     }
 
     protected override void OnPaint(PaintEventArgs e)
