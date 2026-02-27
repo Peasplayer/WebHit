@@ -34,8 +34,17 @@ public partial class Form1 : ResizeForm
                 RegisterResizeControl(card, new SizeF(3f, 3f));
             });
         });
+        
+        _confirmButton = new Button
+        {
+            BackgroundImageLayout = ImageLayout.Zoom,
+            FlatStyle = FlatStyle.Flat,
+            BackColor = Color.Transparent,
+            Cursor =  Cursors.Hand,
+        };
+        
+        _confirmButton.BackgroundImage = Image.FromStream(Program.GetResource("Gruener Harken.png"));
 
-        _confirmButton = new Button { Text = "Confirm", BackColor = Color.DarkGray };
         _confirmButton.Click += (_, _) =>
         {
             if (currentCard == null)
