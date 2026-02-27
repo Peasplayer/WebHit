@@ -7,6 +7,7 @@ public abstract class ResizeForm : Form
     private int widthUnit;
     private int heightUnit;
     private List<ResizeControl> _resizeControls = new ();
+    private event Action? _resized;
 
     public ResizeForm()
     {
@@ -17,10 +18,8 @@ public abstract class ResizeForm : Form
         _containerDisplay.SendToBack();
         Controls.Add(_containerDisplay);
         
-        SizeChanged += (_, _) =>
-        {
-            _startRenderingForm();
-        };
+        SizeChanged += (_, _) => _startRenderingForm();
+        Resize += (_, _) => _startRenderingForm();
         
         _startRenderingForm();
     }
@@ -56,15 +55,17 @@ public abstract class ResizeForm : Form
             if (c.Location != null)
                 c.Control.Location = GetLocation(c.Location.Value);
         }
+        
+        if (_resized != null)
+            _resized.Invoke();
     }
 
-    public void RegisterResizeControl(Control control, SizeF size, PointF? location = null)
+    public void RegisterResizeControl(Control control, SizeF size, PointF? location = null, Action? resized = null)
     {
         var c = new ResizeControl(control, size, location);
-        c.Control.Size = GetSize(c.Size);
-        if (c.Location != null)
-            c.Control.Location = GetLocation(c.Location.Value);
         _resizeControls.Add(c);
+        _resized += resized;
+        _startRenderingForm();
     }
     
     private Size GetSize(SizeF size)
