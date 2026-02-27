@@ -46,7 +46,7 @@ public partial class Form1 : ResizeForm
             Cursor =  Cursors.Hand,
         };
         
-        using var stream = Program.GetResource("Gruener_Harken.jpg");
+         var stream = Program.GetResource("Gruener Harken.png");
         _confirmButton.BackgroundImage = Image.FromStream(stream);
 
         _confirmButton.Click += (_, _) =>
