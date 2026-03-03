@@ -1,10 +1,13 @@
-﻿namespace Hitster;
+﻿using Hitster.Networking;
+
+namespace Hitster;
 
 public class Timeline : Panel
 {
-    private readonly List<Card> _cards = new();
+    private List<Card> _cards = new();
     private readonly List<Panel> _activeSlots = new();
     private bool _slotsVisible;
+    public Player? Player { get; private set; }
 
     public event Action<int>? SlotClicked;
 
@@ -14,20 +17,55 @@ public class Timeline : Panel
         Render();
     }
 
-    public void InsertCard(Card card, int index)
+    public void SetPlayer(Player player)
     {
-        if (card.IsConfirmed)
+        if (Player != null && Player.Id == player.Id)
+        {
             return;
+        }
         
-        if (_cards.Contains(card))
-            _cards.Remove(card);
+        Player = player;
         
-        if (index >= _cards.Count)
+        foreach (var card in _cards)
+        {
+            Controls.Remove(card);
+            card.Dispose();
+        }
+        foreach (var t in Player.AllTracks)
+        {
+            var card = new Card(t);
             _cards.Add(card);
-        else
-            _cards.Insert(index, card);
+        }
         
         Render();
+    }
+
+    public void UpdateTracks()
+    {
+        try
+        {
+            var cards = new List<Card>();
+            foreach (var t in Player.AllTracks)
+            {
+                var card = _cards.Find(c => c.Track.Id == t.Id);
+                if (card == null)
+                {
+                    card = new Card(t);
+                    _cards.Add(card);
+                }
+
+                if (Player.CurrentTrack != t && !card.IsConfirmed)
+                    card.MarkAsConfirmed();
+                cards.Add(card);
+            }
+
+            _cards = cards;
+            Render();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
 
     public void AfterResize()
@@ -55,14 +93,16 @@ public class Timeline : Panel
         {
             return;
         }
-        
-        var totalWidth = _cards.Sum(card => card.Width);
+
+        var cardWidth = Height / 7 * 6;
+        var totalWidth = _cards.Count * cardWidth;
         var startX = (Width - totalWidth) / 2;
 
         int slotIndex = 1;
         foreach (var card in _cards)
         {
             var cardIndex = _cards.IndexOf(card);
+            card.Size = new Size(cardWidth, cardWidth);
             card.Location = new Point(startX + card.Width * cardIndex, Height - card.Height);
             Controls.Add(card);
 

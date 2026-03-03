@@ -4,5 +4,9 @@ public enum PacketType : uint
 {
     Handshake,
     RequestTrack,
-    Track
+    Track,
+    Confirm,
+    Move,
+    SwitchTurn,
+    Join
 }

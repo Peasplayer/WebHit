@@ -2,12 +2,10 @@ namespace HitsterServer.Packets;
 
 public class Packet
 {
-    public string ConversationId { get; private set; }
     public PacketType PacketType { get; private set; }
 
-    public Packet(PacketType packetType, string? conversationId)
+    public Packet(PacketType packetType)
     {
         PacketType = packetType;
-        ConversationId = conversationId ?? Guid.NewGuid().ToString();
     }
 }

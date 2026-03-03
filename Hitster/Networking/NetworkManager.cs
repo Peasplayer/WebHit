@@ -10,7 +10,6 @@ public class NetworkManager
     public static NetworkManager Instance { get; private set; }
     
     public WebsocketClient Client { get; }
-    public string Name { get; private set; }
 
     public NetworkManager(string address, string name)
     {
@@ -40,44 +39,68 @@ public class NetworkManager
 
     private void HandlePacket(string msg)
     {
-        Console.WriteLine("MESSAGE:" + msg);
-        
-        // Nachricht wird in Packet umgewandelt
-        var packet = JsonConvert.DeserializeObject<Packet>(msg);
-        if (packet == null)
+        try
         {
-            Console.WriteLine("Received malformed packet!");
-            return;
+            Console.WriteLine("MESSAGE:" + msg);
+
+            // Nachricht wird in Packet umgewandelt
+            var packet = JsonConvert.DeserializeObject<Packet>(msg);
+            if (packet == null)
+            {
+                Console.WriteLine("Received malformed packet!");
+                return;
+            }
+
+            switch (packet.PacketType)
+            {
+                case PacketType.Handshake:
+                {
+                    var handshakePacket = JsonConvert.DeserializeObject<HandshakePacket>(msg);
+                    if (handshakePacket == null)
+                    {
+                        Console.WriteLine("Received malformed packet!");
+                        return;
+                    }
+
+                    Console.WriteLine($"Got name ({handshakePacket.Name}) assigned");
+                    Player.LocalPlayer = new Player(handshakePacket.Id, handshakePacket.Name);
+                    break;
+                }
+                case PacketType.Track:
+                {
+                    var trackPacket = JsonConvert.DeserializeObject<TrackPacket>(msg);
+                    if (trackPacket == null)
+                    {
+                        Console.WriteLine("Received malformed packet!");
+                        return;
+                    }
+
+                    Console.WriteLine($"Got song ({trackPacket.Track.Name})");
+                    Player.Players.Find(p => p.Id == trackPacket.Id)?.PlaceCurrentTrack(0, trackPacket.Track);
+                    //_track = trackPacket.Track;
+                    break;
+                }
+                case PacketType.Join:
+                {
+                    var joinPacket = JsonConvert.DeserializeObject<JoinPacket>(msg);
+                    if (joinPacket == null)
+                    {
+                        Console.WriteLine("Received malformed packet!");
+                        return;
+                    }
+
+                    if (joinPacket.Id == Player.LocalPlayer.Id)
+                        return;
+
+                    Console.WriteLine($"Player {joinPacket.Name} ({joinPacket.Id}) joined");
+                    new Player(joinPacket.Id, joinPacket.Name);
+                    break;
+                }
+            }
         }
-        
-        switch (packet.PacketType)
+        catch (Exception e)
         {
-            case PacketType.Handshake:
-            {
-                var handshakePacket = JsonConvert.DeserializeObject<HandshakePacket>(msg);
-                if (handshakePacket == null)
-                {
-                    Console.WriteLine("Received malformed packet!");
-                    return;
-                }
-                
-                Console.WriteLine($"Got name ({handshakePacket.Name}) assigned");
-                Name = handshakePacket.Name;
-                break;
-            }
-            case PacketType.Track:
-            {
-                var trackPacket = JsonConvert.DeserializeObject<TrackPacket>(msg);
-                if (trackPacket == null)
-                {
-                    Console.WriteLine("Received malformed packet!");
-                    return;
-                }
-                
-                Console.WriteLine($"Got song ({trackPacket.Track.Name}) in conversation ({trackPacket.ConversationId})");
-                _tracks.Add(trackPacket.ConversationId, trackPacket.Track);
-                break;
-            }
+            Console.WriteLine(e);
         }
     }
 
@@ -85,14 +108,14 @@ public class NetworkManager
         Client.Send(JsonConvert.SerializeObject(packet));
     }
 
-    private Dictionary<string, TrackData> _tracks = new ();
+    private TrackData? _track;
     public TrackData RequestTrackData()
     {
-        var p = new Packet(PacketType.RequestTrack, null);
+        var p = new Packet(PacketType.RequestTrack);
         SendPacket(p);
-        while (!_tracks.ContainsKey(p.ConversationId)) ;
-        var track = _tracks[p.ConversationId];
-        _tracks.Remove(p.ConversationId);
+        while (_track == null) ;
+        var track = _track;
+        _track = null;
         return track;
     }
 }

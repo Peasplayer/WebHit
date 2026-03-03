@@ -1,10 +1,10 @@
 namespace Hitster;
 
-public struct TrackData
+public class TrackData
 {
     public string Id { get; }
     public string Name { get; }
-    public String Artist { get; }
+    public string Artist { get; }
     public string Link { get; }
     public int ReleaseYear { get; }
     

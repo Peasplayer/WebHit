@@ -93,7 +93,14 @@ public class GameServer
                 
                 client.Name = name;
                 
-                SendPacket(new HandshakePacket(name, rawPacket.ConversationId), client);
+                SendPacket(new HandshakePacket(name, client.Id), client);
+                Task.Delay(500).Wait();
+                foreach (var p in Clients)
+                {
+                    if (p.Value.Id != client.Id && p.Value.Name != null)
+                        SendPacket(new JoinPacket(p.Value.Name, p.Value.Id), client);
+                }
+                SendPacketEveryone(new JoinPacket(name, client.Id));
                 
                 FleckLog.Info($"<{client.Id}> Name set to: {name}");
                 break;
@@ -102,7 +109,7 @@ public class GameServer
             {
                 // Bereit Antwort-Packet mit zufälligem Song vor
                 var track = await MusicManager.GetRandomTrack();
-                var response = new TrackPacket(track, rawPacket.ConversationId);
+                var response = new TrackPacket(track, client.Id);
                 
                 // Jeder kriegt den Song um an der Runde teilzuhaben
                 SendPacketEveryone(response);
@@ -122,7 +129,7 @@ public class GameServer
         }
     }
     
-    private void SendPacketEveryone(Packet packet)
+    public void SendPacketEveryone(Packet packet)
     {
         var rawPacket = JsonConvert.SerializeObject(packet);
         foreach (var receiver in Clients.Values)

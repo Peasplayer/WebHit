@@ -1,11 +1,11 @@
 namespace HitsterServer.Packets;
 
-public class HandshakePacket : Packet
+public class JoinPacket : Packet
 {
     public string Name { get; }
     public int Id { get; }
     
-    public HandshakePacket(string name, int id) : base(PacketType.Handshake)
+    public JoinPacket(string name, int id) : base(PacketType.Join)
     {
         Name = name;
         Id = id;
