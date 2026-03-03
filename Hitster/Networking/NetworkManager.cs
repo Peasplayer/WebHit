@@ -77,7 +77,6 @@ public class NetworkManager
 
                     Console.WriteLine($"Got song ({trackPacket.Track.Name})");
                     Player.Players.Find(p => p.Id == trackPacket.Id)?.PlaceCurrentTrack(0, trackPacket.Track);
-                    //_track = trackPacket.Track;
                     break;
                 }
                 case PacketType.Join:
@@ -96,6 +95,45 @@ public class NetworkManager
                     new Player(joinPacket.Id, joinPacket.Name);
                     break;
                 }
+                case PacketType.Start:
+                {
+                    Lobby.Instance?.BeginInvoke(() =>
+                    {
+                        var form = new Form1();
+                        form.Show();
+                        Lobby.Instance.Hide();
+                    });
+                    break;
+                }
+                case PacketType.Confirm:
+                {
+                    Player.CurrentPlayer.ConfirmTrack();
+                    break;
+                }
+                case PacketType.SwitchTurn:
+                {
+                    var turnPacket = JsonConvert.DeserializeObject<TurnPacket>(msg);
+                    if (turnPacket == null)
+                    {
+                        Console.WriteLine("Received malformed packet!");
+                        return;
+                    }
+
+                    Player.CurrentPlayer = Player.Players.Find(p => p.Id == turnPacket.Player);
+                    break;
+                }
+                case PacketType.Move:
+                {
+                    var movePacket = JsonConvert.DeserializeObject<MovePacket>(msg);
+                    if (movePacket == null)
+                    {
+                        Console.WriteLine("Received malformed packet!");
+                        return;
+                    }
+
+                    Player.CurrentPlayer.PlaceCurrentTrack(movePacket.Index);
+                    break;
+                }
             }
         }
         catch (Exception e)
@@ -104,18 +142,26 @@ public class NetworkManager
         }
     }
 
-    public void SendPacket(Packet packet) {
+    private void SendPacket(Packet packet) {
         Client.Send(JsonConvert.SerializeObject(packet));
     }
 
-    private TrackData? _track;
-    public TrackData RequestTrackData()
+    public void RpcStart()
     {
-        var p = new Packet(PacketType.RequestTrack);
-        SendPacket(p);
-        while (_track == null) ;
-        var track = _track;
-        _track = null;
-        return track;
+        SendPacket(new Packet(PacketType.Start));
+    }
+    
+    public void RpcConfirmTrack()
+    {
+        if (Player.CurrentPlayer.Id != Player.LocalPlayer.Id)
+            return;
+        SendPacket(new Packet(PacketType.Confirm));
+    }
+
+    public void RpcMoveCurrentTrack(int index)
+    {
+        if (Player.CurrentPlayer.Id != Player.LocalPlayer.Id)
+            return;
+        SendPacket(new MovePacket(index));
     }
 }

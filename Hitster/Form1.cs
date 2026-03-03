@@ -5,10 +5,10 @@ namespace Hitster;
 
 public partial class Form1 : ResizeForm
 {
-    public static Form1 Instance;
+    public static Form1? Instance { get; private set; }
 
-    public Timeline Timeline { get; }
-    private Card? currentCard;
+    private Timeline OwnTimeline { get; }
+    private Timeline OtherTimeline { get; }
     private readonly Button _confirmButton;
 
     private WasapiOut? _musicPlayer;
@@ -16,31 +16,33 @@ public partial class Form1 : ResizeForm
     public Form1()
     {
         Instance = this;
+        FormClosing += (_, _) => Instance = null;
         InitializeComponent();
         
-        Timeline = new Timeline();
-        Timeline.SlotClicked += OnSlotClicked;
-        Timeline.SetPlayer(Player.LocalPlayer);
-        RegisterResizeControl(Timeline, new SizeF(30, 3.5f), new PointF(1, 1), Timeline.AfterResize);
-        Controls.Add(Timeline);
+        OwnTimeline = new Timeline();
+        OwnTimeline.SetPlayer(Player.LocalPlayer);
+        RegisterResizeControl(OwnTimeline, new SizeF(30, 3.5f), new PointF(1, 1), OwnTimeline.AfterResize);
+        Controls.Add(OwnTimeline);
+
+        OtherTimeline = new Timeline();
+        OtherTimeline.SetPlayer(Player.Players.Find(p => p.Id != Player.LocalPlayer.Id));
+        RegisterResizeControl(OtherTimeline, new SizeF(30, 3.5f), new PointF(1, 10), OtherTimeline.AfterResize);
+        Controls.Add(OtherTimeline);
         
         _confirmButton = new Button
         {
             BackgroundImageLayout = ImageLayout.Zoom,
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.Transparent,
-            Cursor =  Cursors.Hand,
+            Cursor = Cursors.Hand,
+            BackgroundImage = Image.FromStream(Program.GetResource("Gruener Harken.png"))
         };
-        
-        _confirmButton.BackgroundImage = Image.FromStream(Program.GetResource("Gruener Harken.png"));
-
         _confirmButton.Click += (_, _) =>
         {
             if (_musicPlayer != null)
                 _musicPlayer.Stop();
             
-            Timeline.Player.ConfirmTrack();
-            Timeline.ToggleSlots(false);
+            NetworkManager.Instance.RpcConfirmTrack();
         };
         Controls.Add(_confirmButton);
         RegisterResizeControl(_confirmButton, new Size(2, 2), new Point(1, 7));
@@ -55,12 +57,10 @@ public partial class Form1 : ResizeForm
         _musicPlayer = new WasapiOut();
         _musicPlayer.Init(mf);
         _musicPlayer.Play();
-    }
-
-    private void OnSlotClicked(int index)
-    {
-        if (currentCard == null) return;
-
-        Player.CurrentPlayer.PlaceCurrentTrack(index);
+        Task.Run(() =>
+        {
+            while (_musicPlayer.PlaybackState == PlaybackState.Playing && Player.CurrentPlayer.CurrentTrack != null) ;
+            _musicPlayer.Stop();
+        });
     }
 }

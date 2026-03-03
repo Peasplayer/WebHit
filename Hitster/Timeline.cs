@@ -4,34 +4,43 @@ namespace Hitster;
 
 public class Timeline : Panel
 {
+    private static List<Timeline> _timelines = new List<Timeline>();
+
+    public static void UpdateTimeline(Player p)
+    {
+        foreach (var t in _timelines)
+        {
+            if (t._player?.Id == p.Id)
+                t.Invoke(t.UpdateTracks);
+        }
+    }
+    
     private List<Card> _cards = new();
     private readonly List<Panel> _activeSlots = new();
-    private bool _slotsVisible;
-    public Player? Player { get; private set; }
-
-    public event Action<int>? SlotClicked;
+    private Player? _player;
 
     public Timeline()
     {
+        _timelines.Add(this);
         BackColor = Color.Green;
         Render();
     }
 
     public void SetPlayer(Player player)
     {
-        if (Player != null && Player.Id == player.Id)
+        if (_player != null && _player.Id == player.Id)
         {
             return;
         }
         
-        Player = player;
+        _player = player;
         
         foreach (var card in _cards)
         {
             Controls.Remove(card);
             card.Dispose();
         }
-        foreach (var t in Player.AllTracks)
+        foreach (var t in _player.AllTracks)
         {
             var card = new Card(t);
             _cards.Add(card);
@@ -40,12 +49,12 @@ public class Timeline : Panel
         Render();
     }
 
-    public void UpdateTracks()
+    private void UpdateTracks()
     {
         try
         {
             var cards = new List<Card>();
-            foreach (var t in Player.AllTracks)
+            foreach (var t in _player.AllTracks)
             {
                 var card = _cards.Find(c => c.Track.Id == t.Id);
                 if (card == null)
@@ -54,7 +63,7 @@ public class Timeline : Panel
                     _cards.Add(card);
                 }
 
-                if (Player.CurrentTrack != t && !card.IsConfirmed)
+                if (_player.CurrentTrack != t && !card.IsConfirmed)
                     card.MarkAsConfirmed();
                 cards.Add(card);
             }
@@ -70,12 +79,6 @@ public class Timeline : Panel
 
     public void AfterResize()
     {
-        Render();
-    }
-
-    public void ToggleSlots(bool showSlots)
-    {
-        _slotsVisible = showSlots;
         Render();
     }
 
@@ -106,7 +109,7 @@ public class Timeline : Panel
             card.Location = new Point(startX + card.Width * cardIndex, Height - card.Height);
             Controls.Add(card);
 
-            if (!_slotsVisible)
+            if (_player != Player.LocalPlayer || Player.CurrentPlayer != Player.LocalPlayer || Player.LocalPlayer.CurrentTrack == null)
                 continue;
             
             if (cardIndex == 0 && card.IsConfirmed)
@@ -128,7 +131,7 @@ public class Timeline : Panel
             BackColor = Color.AliceBlue,
         };
         slot.Location = new Point(middle - slot.Width / 2, 0);
-        slot.Click += (_, _) => SlotClicked?.Invoke(index);
+        slot.Click += (_, _) => NetworkManager.Instance.RpcMoveCurrentTrack(index);
         Controls.Add(slot);
         _activeSlots.Add(slot);
     }

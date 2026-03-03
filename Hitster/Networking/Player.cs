@@ -24,15 +24,12 @@ public class Player
 
     public void PlaceCurrentTrack(int index, TrackData? track = null)
     {
-        Console.WriteLine("Track move");
         if (track != null)
         {
             if (AllTracks.Count != 0)
             {
-                Form1.Instance.Invoke(() => Form1.Instance.PlayTrack(track));
                 CurrentTrack = track;
-                if (Id == LocalPlayer.Id)
-                    Form1.Instance.Invoke(() => Form1.Instance.Timeline.ToggleSlots(true));
+                Form1.Instance.Invoke(() => Form1.Instance.PlayTrack(track));
             }
             AllTracks.Add(track);
         }
@@ -41,18 +38,13 @@ public class Player
             AllTracks.Remove(CurrentTrack);
             AllTracks.Insert(index, CurrentTrack);
         }
-        
-        Form1.Instance.Invoke(() => Form1.Instance.Timeline.UpdateTracks());
-    }
 
-    public void RpcConfirmTrack()
-    {
-        // Do Network Stuff
+        Timeline.UpdateTimeline(this);
     }
 
     public void ConfirmTrack()
     {
         CurrentTrack = null;
-        Form1.Instance.Invoke(() => Form1.Instance.Timeline.UpdateTracks());
+        Timeline.UpdateTimeline(this);
     }
 }

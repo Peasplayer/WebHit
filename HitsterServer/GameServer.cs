@@ -10,14 +10,15 @@ public class GameServer
     public static GameServer Instance { get; private set; }
 
     public WebSocketServer Server { get; }
-    public Dictionary<string, ClientData> Clients { get; }
+    public List<ClientData> Clients { get; }
     public int IdCounter { get; private set; }
     public bool GameIsStarted;
+    public int CurrentPlayer { get; private set; }
     
     public GameServer(int port)
     {
         Instance = this;
-        Clients = new Dictionary<string, ClientData>();
+        Clients = new List<ClientData>();
         
         Server = new WebSocketServer("ws://0.0.0.0:"  + port);
         Server.Start(connection =>
@@ -47,21 +48,21 @@ public class GameServer
     private void OnConnect(IWebSocketConnection connection) {
         var client = new ClientData(connection, IdCounter++);
         FleckLog.Info($"<{client.Id}> Connected");
-        Clients.Add(connection.ConnectionInfo.Id.ToString(), client);
+        Clients.Add(client);
     }
 
     private void OnDisconnect(IWebSocketConnection connection, Exception? e = null) {
-        var client = Clients[connection.ConnectionInfo.Id.ToString()];
+        var client = GetClient(connection);
         if (e != null) {
             FleckLog.Error($"<{client.Id}> {e.Message}");
         }
         FleckLog.Info($"<{client.Id}> Disconnected");
-        Clients.Remove(connection.ConnectionInfo.Id.ToString());
+        Clients.Remove(client);
     }
 
     private async void OnMessage(IWebSocketConnection connection, string msg)
     {
-        var client = Clients[connection.ConnectionInfo.Id.ToString()];
+        var client = GetClient(connection);
         FleckLog.Info($"<{client.Id}> Said: {msg}");
         
         var rawPacket = JsonConvert.DeserializeObject<Packet>(msg);
@@ -70,8 +71,8 @@ public class GameServer
             FleckLog.Warn($"<{client.Id}> Malformed Packet received!");
             return;
         }
-        
-        switch (rawPacket.PacketType) 
+
+        switch (rawPacket.PacketType)
         {
             case PacketType.Handshake:
             {
@@ -81,40 +82,64 @@ public class GameServer
                     FleckLog.Warn($"<{client.Id}> Malformed Packet received!");
                     return;
                 }
-                
+
                 // Falls der Name schon vergeben ist, wird eine Zahl dran gehängt
                 var name = packet.Name;
                 var iteration = 0;
-                while (Clients.Values.ToList().Find(c => c.Name == name) != null)
+                while (Clients.Find(c => c.Name == name) != null)
                 {
                     iteration++;
                     name = packet.Name + " (" + iteration + ")";
                 }
-                
+
                 client.Name = name;
-                
+
                 SendPacket(new HandshakePacket(name, client.Id), client);
+
                 Task.Delay(500).Wait();
-                foreach (var p in Clients)
+                foreach (var c in Clients)
                 {
-                    if (p.Value.Id != client.Id && p.Value.Name != null)
-                        SendPacket(new JoinPacket(p.Value.Name, p.Value.Id), client);
+                    if (c.Id != client.Id && c.Name != null)
+                        SendPacket(new JoinPacket(c.Name, c.Id), client);
                 }
                 SendPacketEveryone(new JoinPacket(name, client.Id));
-                
+
                 FleckLog.Info($"<{client.Id}> Name set to: {name}");
                 break;
             }
-            case PacketType.RequestTrack:
+            case PacketType.Start:
             {
-                // Bereit Antwort-Packet mit zufälligem Song vor
-                var track = await MusicManager.GetRandomTrack();
-                var response = new TrackPacket(track, client.Id);
+                SendPacketEveryone(rawPacket);
+                foreach (var c in Clients)
+                {
+                    SendPacketEveryone(new TrackPacket(await MusicManager.GetRandomTrack(), c.Id));
+                }
                 
-                // Jeder kriegt den Song um an der Runde teilzuhaben
-                SendPacketEveryone(response);
+                CurrentPlayer = Clients[0].Id;
+                SendPacketEveryone(new TurnPacket(CurrentPlayer));
+                SendPacketEveryone(new TrackPacket(await MusicManager.GetRandomTrack(), CurrentPlayer));
+                break;
+            }
+            case PacketType.Confirm:
+            {
+                SendPacketEveryone(rawPacket);
+
+                var index = Clients.FindIndex(c => c.Id == CurrentPlayer);
+                CurrentPlayer = (index + 1 >= Clients.Count ? Clients[0] : Clients[index + 1]).Id;
+                SendPacketEveryone(new TurnPacket(CurrentPlayer));
+                SendPacketEveryone(new TrackPacket(await MusicManager.GetRandomTrack(), CurrentPlayer));
+                break;
+            }
+            case PacketType.Move:
+            {
+                var packet = JsonConvert.DeserializeObject<MovePacket>(msg);
+                if (packet == null)
+                {
+                    FleckLog.Warn($"<{client.Id}> Malformed Packet received!");
+                    return;
+                }
                 
-                FleckLog.Info($"<{client.Id}> got song '{track.Name}' ({track.ReleaseYear})");
+                SendPacketEveryone(packet);
                 break;
             }
         }
@@ -132,9 +157,17 @@ public class GameServer
     public void SendPacketEveryone(Packet packet)
     {
         var rawPacket = JsonConvert.SerializeObject(packet);
-        foreach (var receiver in Clients.Values)
+        foreach (var receiver in Clients)
         {
             receiver.Connection.Send(rawPacket);
         }
+    }
+
+    private ClientData GetClient(IWebSocketConnection connection)
+    {
+        var client = Clients.Find(c => connection.ConnectionInfo.Id == c.ConnId);
+        if (client == null)
+            throw new KeyNotFoundException("No client with that connection id found!");
+        return client;
     }
 }
