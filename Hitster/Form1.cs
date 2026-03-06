@@ -9,8 +9,7 @@ public partial class Form1 : ResizeForm
 
     private Timeline OwnTimeline { get; }
     private Timeline OtherTimeline { get; }
-    private readonly Button _confirmButton;
-
+    private FlowLayoutPanel PlayerArea { get; }
     private WasapiOut? _musicPlayer;
     
     public Form1()
@@ -28,24 +27,16 @@ public partial class Form1 : ResizeForm
         OtherTimeline.SetPlayer(Player.Players.Find(p => p.Id != Player.LocalPlayer.Id));
         RegisterResizeControl(OtherTimeline, new SizeF(30, 3.5f), new PointF(1, 10), OtherTimeline.AfterResize);
         Controls.Add(OtherTimeline);
-        
-        _confirmButton = new Button
+
+        PlayerArea = new FlowLayoutPanel()
         {
-            BackgroundImageLayout = ImageLayout.Zoom,
-            FlatStyle = FlatStyle.Flat,
-            BackColor = Color.Transparent,
-            Cursor = Cursors.Hand,
-            BackgroundImage = Image.FromStream(Program.GetResource("Gruener Harken.png"))
+            BackColor = Color.FromArgb(40, 40, 40),
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            AutoScroll = true
         };
-        _confirmButton.Click += (_, _) =>
-        {
-            if (_musicPlayer != null)
-                _musicPlayer.Stop();
-            
-            NetworkManager.Instance.RpcConfirmTrack();
-        };
-        Controls.Add(_confirmButton);
-        RegisterResizeControl(_confirmButton, new Size(2, 2), new Point(1, 7));
+        RegisterResizeControl(PlayerArea, new SizeF(32, 4f), new PointF(0, 14), RenderPlayers);
+        Controls.Add(PlayerArea);
     }
 
     public void PlayTrack(TrackData track)
@@ -62,5 +53,37 @@ public partial class Form1 : ResizeForm
             while (_musicPlayer.PlaybackState == PlaybackState.Playing && Player.CurrentPlayer.CurrentTrack != null) ;
             _musicPlayer.Stop();
         });
+      
+    }
+    
+    private void RenderPlayers()
+    {
+        foreach (Control playerAreaControl in PlayerArea.Controls)
+        {
+            playerAreaControl.Dispose();
+        }
+        PlayerArea.Controls.Clear();
+
+        foreach (var player in Player.Players)
+        {
+            var pad = new Padding((int) (PlayerArea.Width / 6f * 0.05f), (int) (PlayerArea.Height * 0.05f), 
+                (int) (PlayerArea.Width / 6f * 0.05f), (int) (PlayerArea.Height * 0.05f));
+            var playerCard = new Panel
+            {
+                Size = new Size(PlayerArea.Width / 6 - pad.Vertical, PlayerArea.Height - pad.Horizontal),
+                BackColor = player.Id == Player.CurrentPlayer.Id ? Color.Orange : Color.Gray,
+                Margin = pad
+            };
+            PlayerArea.Controls.Add(playerCard);
+            
+            var nameLabel = new Label
+            {
+                Text = player.Name,
+                TextAlign = ContentAlignment.MiddleCenter,
+                ForeColor = Color.White,
+                Font = new Font(Program.MontserratSemiBold, 12, FontStyle.Bold)
+            };
+            playerCard.Controls.Add(nameLabel);
+        }
     }
 }
