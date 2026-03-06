@@ -1,5 +1,4 @@
 using System.Net.Http.Headers;
-using System.Reflection;
 using Fleck;
 using Newtonsoft.Json;
 
@@ -8,12 +7,12 @@ namespace HitsterServer.MusicData;
 public class MusicManager
 {
     private static DateTime _time;
-    private static TrackData[] _tracks;
+    private static List<TrackData> _tracks;
     private static List<string> _usedTracks = new List<string>();
     
-    public static async Task<TrackData[]> GetTracks()
+    public static async Task<List<TrackData>> GetTracks()
     {
-        if (_time + TimeSpan.FromMinutes(15) < DateTime.Now)
+        if (_time + TimeSpan.FromMinutes(15) < DateTime.Now || _tracks.Count == 0)
         {
             FleckLog.Debug("Reloading expired track data...");
             using (var client = new HttpClient())
@@ -31,11 +30,11 @@ public class MusicManager
                         }
                 })?.tracks.data ?? [];
 
-                var tracks = new TrackData[rawTrackData.Length];
-                for (var i = 0; i < rawTrackData.Length; i++)
+                var tracks = new List<TrackData>();
+                foreach (var track in rawTrackData)
                 {
-                    var rawTrack = rawTrackData[i];
-                    tracks[i] = new TrackData(rawTrack.id, rawTrack.title_short, rawTrack.artist.name, rawTrack.preview);
+                    if (!_usedTracks.Contains(track.id) && track.preview != "")
+                        tracks.Add(new TrackData(track.id, track.title_short, track.artist.name, track.preview));
                 }
                 
                 return _tracks = tracks;
@@ -49,12 +48,9 @@ public class MusicManager
     public static async Task<TrackData> GetRandomTrack()
     {
         var tracks = await GetTracks();
-        var randomTrack = tracks[Random.Shared.Next(tracks.Length)];
-
-        while (_usedTracks.Contains(randomTrack.Id) || randomTrack.Link == "")
-        {
-            randomTrack = tracks[Random.Shared.Next(tracks.Length)];
-        }
+        var randomTrackIndex = Random.Shared.Next(tracks.Count);
+        var randomTrack = tracks[randomTrackIndex];
+        tracks.RemoveAt(randomTrackIndex);
         
         FleckLog.Info($"Random Track: {randomTrack.Artist} - {randomTrack.Name}");
 
@@ -106,5 +102,11 @@ public class MusicManager
     {
         [JsonProperty("year")]
         public string? Year;
+    }
+
+    public static void ResetUsedTracks()
+    {
+        _usedTracks.Clear();
+        _tracks.Clear();
     }
 }

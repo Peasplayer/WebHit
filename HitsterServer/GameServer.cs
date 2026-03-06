@@ -68,7 +68,19 @@ public class GameServer
             FleckLog.Error($"<{client.Id}> {e.Message}");
         FleckLog.Info($"<{client.Id}> Disconnected");
         Clients.Remove(client);
+        SendPacketEveryone(new LeavePacket(client.Id));
 
+        if (Clients.Count <= 1)
+        {
+            GameIsStarted = false;
+            foreach (var c in Clients)
+            {
+                c.Connection.Close();
+            }
+
+            return;
+        }
+        
         if (client.IsHost && Clients.Count != 0)
         {
             Clients[0].IsHost = true;
@@ -130,6 +142,7 @@ public class GameServer
                     return;
 
                 GameIsStarted = true;
+                MusicManager.ResetUsedTracks();
 
                 SendPacketEveryone(rawPacket);
                 foreach (var c in Clients)

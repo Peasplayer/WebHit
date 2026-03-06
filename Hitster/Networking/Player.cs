@@ -20,6 +20,7 @@ public class Player
         AllTracks = new List<TrackData>();
         
         Players.Add(this);
+        Players.Sort((x, y) => x.Id.CompareTo(y.Id));
         if (id == 0)
             CurrentPlayer = this;
     }

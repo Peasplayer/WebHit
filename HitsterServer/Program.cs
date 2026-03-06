@@ -1,6 +1,5 @@
 ﻿using Fleck;
 using HitsterServer.MusicData;
-using HitsterServer.Packets;
 
 namespace HitsterServer;
 
@@ -16,7 +15,7 @@ class Program
         FleckLog.Info("Loading tracks...");
         var task = MusicManager.GetTracks();
         task.Wait();
-        FleckLog.Info($"Done! Loaded {task.Result.Length} tracks");
+        FleckLog.Info($"Done! Loaded {task.Result.Count} tracks");
 
         FleckLog.Warn("Press 'X' to exit the program");
         while (Console.ReadKey(true).Key != ConsoleKey.X) ;

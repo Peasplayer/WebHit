@@ -21,9 +21,9 @@ public sealed class Card : Panel
         BackgroundImageLayout = ImageLayout.Zoom;
         BorderStyle = BorderStyle.FixedSingle;
 
-        _artist = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.Artist, Visible = false };
+        _artist = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.Name.Replace("&", "&&"), Visible = false };
         _year = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.ReleaseYear.ToString(), Visible = false };
-        _title = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.Name, Visible = false };
+        _title = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.Artist.Replace("&", "&&"), Visible = false };
         Controls.AddRange(_artist, _year, _title);
 
         void ResizeLabels()

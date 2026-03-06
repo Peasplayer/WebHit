@@ -4,6 +4,7 @@ public enum PacketType : uint
 {
     Handshake,
     Join,
+    Leave,
     Host,
     Start,
     Track,

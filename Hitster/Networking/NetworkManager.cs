@@ -75,7 +75,7 @@ public class NetworkManager
                         return;
                     }
 
-                    Console.WriteLine($"Got song ({trackPacket.Track.Name})");
+                    Console.WriteLine($"Got song ({trackPacket.Track.Name}) by ({trackPacket.Track.Artist})");
                     Player.Players.Find(p => p.Id == trackPacket.Id)?.PlaceCurrentTrack(0, trackPacket.Track);
                     break;
                 }
@@ -93,6 +93,18 @@ public class NetworkManager
 
                     Console.WriteLine($"Player {joinPacket.Name} ({joinPacket.Id}){(joinPacket.IsHost ? " [Host]" : "")} joined");
                     new Player(joinPacket.Id, joinPacket.Name, joinPacket.IsHost);
+                    break;
+                }
+                case PacketType.Leave:
+                {
+                    var leavePacket = JsonConvert.DeserializeObject<LeavePacket>(msg);
+                    if (leavePacket == null)
+                    {
+                        Console.WriteLine("Received malformed packet!");
+                        return;
+                    }
+
+                    Player.Players.RemoveAll(p => p.Id == leavePacket.Player);
                     break;
                 }
                 case PacketType.Host:

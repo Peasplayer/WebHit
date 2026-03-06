@@ -71,11 +71,11 @@ public partial class Form1 : ResizeForm
             var playerCard = new Panel
             {
                 Size = new Size(PlayerArea.Width / 6 - pad.Vertical, PlayerArea.Height - pad.Horizontal),
-                BackColor = player.Id == Player.CurrentPlayer.Id ? Color.Orange : Color.Gray,
+                BackColor = player.Id == Player.CurrentPlayer?.Id ? Color.Orange : Color.Gray,
                 Margin = pad
             };
             PlayerArea.Controls.Add(playerCard);
-            
+
             var nameLabel = new Label
             {
                 Text = player.Name,
@@ -83,6 +83,7 @@ public partial class Form1 : ResizeForm
                 ForeColor = Color.White,
                 Font = new Font(Program.MontserratSemiBold, 12, FontStyle.Bold)
             };
+            nameLabel.AutoSize = true;
             playerCard.Controls.Add(nameLabel);
         }
     }
