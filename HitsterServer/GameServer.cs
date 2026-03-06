@@ -46,18 +46,35 @@ public class GameServer
     }
 
     private void OnConnect(IWebSocketConnection connection) {
+        if (GameIsStarted)
+        {
+            connection.Close();
+            return;
+        }
+
         var client = new ClientData(connection, IdCounter++);
         FleckLog.Info($"<{client.Id}> Connected");
+        if (Clients.Count == 0)
+        {
+            client.IsHost = true;
+            FleckLog.Info($"<{client.Id}> Became Host");
+        }
         Clients.Add(client);
     }
 
     private void OnDisconnect(IWebSocketConnection connection, Exception? e = null) {
         var client = GetClient(connection);
-        if (e != null) {
+        if (e != null)
             FleckLog.Error($"<{client.Id}> {e.Message}");
-        }
         FleckLog.Info($"<{client.Id}> Disconnected");
         Clients.Remove(client);
+
+        if (client.IsHost && Clients.Count != 0)
+        {
+            Clients[0].IsHost = true;
+            FleckLog.Info($"<{Clients[0].Id}> Became Host");
+            SendPacketEveryone(new HostPacket(Clients[0].Id));
+        }
     }
 
     private async void OnMessage(IWebSocketConnection connection, string msg)
@@ -94,21 +111,26 @@ public class GameServer
 
                 client.Name = name;
 
-                SendPacket(new HandshakePacket(name, client.Id), client);
+                SendPacket(new HandshakePacket(name, client.Id, client.IsHost), client);
 
                 Task.Delay(500).Wait();
                 foreach (var c in Clients)
                 {
                     if (c.Id != client.Id && c.Name != null)
-                        SendPacket(new JoinPacket(c.Name, c.Id), client);
+                        SendPacket(new JoinPacket(c.Name, c.Id, c.IsHost), client);
                 }
-                SendPacketEveryone(new JoinPacket(name, client.Id));
+                SendPacketEveryone(new JoinPacket(name, client.Id, client.IsHost));
 
                 FleckLog.Info($"<{client.Id}> Name set to: {name}");
                 break;
             }
             case PacketType.Start:
             {
+                if (!client.IsHost)
+                    return;
+
+                GameIsStarted = true;
+
                 SendPacketEveryone(rawPacket);
                 foreach (var c in Clients)
                 {

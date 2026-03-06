@@ -62,8 +62,8 @@ public class NetworkManager
                         return;
                     }
 
-                    Console.WriteLine($"Got name ({handshakePacket.Name}) assigned");
-                    Player.LocalPlayer = new Player(handshakePacket.Id, handshakePacket.Name);
+                    Console.WriteLine($"Got name ({handshakePacket.Name}){(handshakePacket.IsHost ? " [Host]" : "")} assigned");
+                    Player.LocalPlayer = new Player(handshakePacket.Id, handshakePacket.Name, handshakePacket.IsHost);
                     break;
                 }
                 case PacketType.Track:
@@ -91,8 +91,20 @@ public class NetworkManager
                     if (joinPacket.Id == Player.LocalPlayer.Id)
                         return;
 
-                    Console.WriteLine($"Player {joinPacket.Name} ({joinPacket.Id}) joined");
-                    new Player(joinPacket.Id, joinPacket.Name);
+                    Console.WriteLine($"Player {joinPacket.Name} ({joinPacket.Id}){(joinPacket.IsHost ? " [Host]" : "")} joined");
+                    new Player(joinPacket.Id, joinPacket.Name, joinPacket.IsHost);
+                    break;
+                }
+                case PacketType.Host:
+                {
+                    var hostPacket = JsonConvert.DeserializeObject<HostPacket>(msg);
+                    if (hostPacket == null)
+                    {
+                        Console.WriteLine("Received malformed packet!");
+                        return;
+                    }
+
+                    Player.Players.Find(p => p.Id == hostPacket.Player)?.SetHost(true);
                     break;
                 }
                 case PacketType.Start:

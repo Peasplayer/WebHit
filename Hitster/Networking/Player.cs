@@ -8,18 +8,25 @@ public class Player
 
     public int Id { get; }
     public string Name { get; }
+    public bool IsHost { get; private set; }
     public List<TrackData> AllTracks { get; }
     public TrackData? CurrentTrack { get; private set; }
     
-    public Player(int id, string name)
+    public Player(int id, string name, bool isHost)
     {
         Id = id;
         Name = name;
+        IsHost = isHost;
         AllTracks = new List<TrackData>();
         
         Players.Add(this);
         if (id == 0)
             CurrentPlayer = this;
+    }
+
+    public void SetHost(bool isHost)
+    {
+        IsHost = isHost;
     }
 
     public void PlaceCurrentTrack(int index, TrackData? track = null)
