@@ -45,6 +45,7 @@ public class MusicManager
         return _tracks;
     }
 
+    private const int ResultCount = 25;
     public static async Task<TrackData> GetRandomTrack()
     {
         var tracks = await GetTracks();
@@ -67,7 +68,7 @@ public class MusicManager
             
             var response = JsonConvert.DeserializeAnonymousType(await client.GetStringAsync(
                     $"https://api.discogs.com/database/search?artist={randomTrack.Artist}" +
-                    $"&release_title={randomTrack.Name}&per_page=10"), 
+                    $"&release_title={randomTrack.Name}&per_page={ResultCount}"), 
                 new { results = Array.Empty<DcResults>() });
                 
             var releaseYears = response.results.ToList().ConvertAll(r =>
@@ -75,7 +76,7 @@ public class MusicManager
             if (releaseYears.Count == 0)
             {
                 response = JsonConvert.DeserializeAnonymousType(await client.GetStringAsync(
-                        $"https://api.discogs.com/database/search?query={randomTrack.Artist} - {randomTrack.Name}&per_page=10"), 
+                        $"https://api.discogs.com/database/search?query={randomTrack.Artist} - {randomTrack.Name}&per_page={ResultCount}"), 
                     new { results = Array.Empty<DcResults>() });
                 
                 releaseYears = response.results.ToList().ConvertAll(r =>
