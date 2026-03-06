@@ -51,21 +51,53 @@ public class Timeline : Panel
 
     private void UpdateTracks()
     {
+        if (_player == null)
+            return;
+        
         try
         {
             var cards = new List<Card>();
             foreach (var t in _player.AllTracks)
             {
-                var card = _cards.Find(c => c.Track.Id == t.Id);
-                if (card == null)
+                var cardIndex = _cards.FindIndex(c => c.Track.Id == t.Id);
+                Card card;
+                if (cardIndex == -1)
                 {
                     card = new Card(t);
                     _cards.Add(card);
                 }
+                else
+                    card = _cards[cardIndex];
 
                 if (_player.CurrentTrack != t && !card.IsConfirmed)
-                    card.MarkAsConfirmed();
+                {
+                    var wrong =
+                        (_cards.IndexOf(card) != 0 && t.ReleaseYear < _cards[cardIndex - 1].Track.ReleaseYear) ||
+                        (_cards.IndexOf(card) != _cards.Count - 1 &&
+                         t.ReleaseYear > _cards[cardIndex + 1].Track.ReleaseYear);
+                    card.MarkAsConfirmed(wrong);
+                    
+                    // Entfernt die Karte nach 3 Sekunden wenn sie falsch ist
+                    if (wrong)
+                        Task.Run(() =>
+                        {
+                            Task.Delay(3000).Wait();
+                            _player.AllTracks.Remove(t);
+                            UpdateTimeline(_player);
+                        });
+                }
                 cards.Add(card);
+            }
+
+            // Tracks die wieder entfernt wurden (weil falsch eingeordnet) werden auch aus der Timeline gelöscht
+            foreach (var card in _cards.ToList())
+            {
+                if (!_player.AllTracks.Contains(card.Track))
+                {
+                    _cards.Remove(card);
+                    Controls.Remove(card);
+                    card.Dispose();
+                }
             }
 
             _cards = cards;
@@ -84,6 +116,9 @@ public class Timeline : Panel
 
     private void Render()
     {
+        if (_player == null)
+            return;
+        
         foreach (var slot in _activeSlots)
         {
             Controls.Remove(slot);

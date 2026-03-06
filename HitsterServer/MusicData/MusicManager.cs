@@ -94,6 +94,11 @@ public class MusicManager
         }
         
         _usedTracks.Add(randomTrack.Id);
+        
+        // Falls kein Jahr emittelt werden kann, wird ein anderer Song verwendet
+        if (randomTrack.ReleaseYear == int.MaxValue)
+            return await GetRandomTrack();
+        
         return randomTrack;
     }
     

@@ -122,9 +122,13 @@ public class GameServer
             }
             case PacketType.Confirm:
             {
+                if (client.Id != CurrentPlayer)
+                    return;
+                
                 SendPacketEveryone(rawPacket);
+                await Task.Delay(5000);
 
-                var index = Clients.FindIndex(c => c.Id == CurrentPlayer);
+                var index = Clients.IndexOf(client);
                 CurrentPlayer = (index + 1 >= Clients.Count ? Clients[0] : Clients[index + 1]).Id;
                 SendPacketEveryone(new TurnPacket(CurrentPlayer));
                 SendPacketEveryone(new TrackPacket(await MusicManager.GetRandomTrack(), CurrentPlayer));
@@ -132,6 +136,9 @@ public class GameServer
             }
             case PacketType.Move:
             {
+                if (client.Id != CurrentPlayer)
+                    return;
+                
                 var packet = JsonConvert.DeserializeObject<MovePacket>(msg);
                 if (packet == null)
                 {

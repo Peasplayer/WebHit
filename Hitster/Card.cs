@@ -1,4 +1,5 @@
 ﻿using System.Drawing.Drawing2D;
+using Hitster.Networking;
 
 namespace Hitster;
 
@@ -43,14 +44,19 @@ public sealed class Card : Panel
 
             _year.Location = new Point((int)(Width * 0.1), (int)(Height * 0.35));
             _year.Size = new Size((int)(Width * 0.8), (int)(Height * 0.3));
-            _year.Font = new Font(Program.MontserratBold, (int)(_year.Size.Height * 0.9), GraphicsUnit.Pixel);
+            _year.Font = new Font(Program.MontserratBold, (int)(_year.Size.Height * 0.85), GraphicsUnit.Pixel);
         }
         
         ResizeLabels();
         SizeChanged += (_, _) => ResizeLabels();
+        Click += (_, _) =>
+        {
+            if (!IsConfirmed && Player.CurrentPlayer == Player.LocalPlayer)
+                NetworkManager.Instance.RpcConfirmTrack();
+        };
     }
 
-    public void MarkAsConfirmed()
+    public void MarkAsConfirmed(bool wrong)
     {
         IsConfirmed = true;
         BackgroundImage = null;
@@ -58,6 +64,8 @@ public sealed class Card : Panel
         _artist.Visible = true;
         _year.Visible = true;
         _title.Visible = true;
+        if (wrong)
+            _artist.ForeColor = _year.ForeColor = _title.ForeColor = Color.Red;
         Invalidate();
     }
 
