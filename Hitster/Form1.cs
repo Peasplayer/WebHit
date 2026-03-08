@@ -15,7 +15,7 @@ public partial class Form1 : ResizeForm
     public Form1()
     {
         Instance = this;
-        FormClosing += (_, _) => Instance = null;
+        FormClosing += (_, _) => Lobby.Instance?.Close();
         InitializeComponent();
         
         OwnTimeline = new Timeline();
@@ -37,6 +37,8 @@ public partial class Form1 : ResizeForm
         };
         RegisterResizeControl(PlayerArea, new SizeF(32, 4f), new PointF(0, 14), RenderPlayers);
         Controls.Add(PlayerArea);
+        
+        Player.PlayerDataChanged += () => Invoke(RenderPlayers);
     }
 
     public void PlayTrack(TrackData track)
@@ -74,16 +76,27 @@ public partial class Form1 : ResizeForm
                 BackColor = player.Id == Player.CurrentPlayer?.Id ? Color.Orange : Color.Gray,
                 Margin = pad
             };
+            playerCard.Click += (_, _) =>
+            {
+                if (player != Player.LocalPlayer)
+                    OtherTimeline.SetPlayer(player);
+            };
             PlayerArea.Controls.Add(playerCard);
 
             var nameLabel = new Label
             {
                 Text = player.Name,
                 TextAlign = ContentAlignment.MiddleCenter,
-                ForeColor = Color.White,
-                Font = new Font(Program.MontserratSemiBold, 12, FontStyle.Bold)
+                ForeColor = Player.LocalPlayer == player ? Color.BurlyWood : Color.White,
+                BackColor = Color.Black,
+                Size = new Size(playerCard.Width, (int)(playerCard.Height * 0.3f)),
+                Font = new Font(Program.MontserratSemiBold, playerCard.Height * 0.1f, FontStyle.Bold, GraphicsUnit.Pixel)
             };
-            nameLabel.AutoSize = true;
+            nameLabel.Click += (_, _) =>
+            {
+                if (player != Player.LocalPlayer)
+                    OtherTimeline.SetPlayer(player);
+            };
             playerCard.Controls.Add(nameLabel);
         }
     }

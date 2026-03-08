@@ -25,7 +25,7 @@ public partial class Lobby : ResizeForm
         Controls.Add(StartButton);
         RegisterResizeControl(StartButton, new SizeF(3, 1), new PointF(14.5f, 14), () =>
         {
-            StartButton.Font = new Font(Program.MontserratBold, StartButton.Height * 0.8f, FontStyle.Bold, GraphicsUnit.Pixel);
+            StartButton.Font = new Font(Program.MontserratBold, Math.Max(StartButton.Height * 0.8f, 1), FontStyle.Bold, GraphicsUnit.Pixel);
         });
         
         Cards = new List<PlayerCard>();
@@ -38,6 +38,8 @@ public partial class Lobby : ResizeForm
             RegisterResizeControl(card, new SizeF(6, 3), new PointF(6 + i % 3 * 7, 4 + (i / 3) * 4), card.Render);
         }
         _refreshPlayers();
+        
+        Player.PlayerDataChanged += () => Invoke(Instance._refreshPlayers);
     }
 
     private void _refreshPlayers()
@@ -49,11 +51,6 @@ public partial class Lobby : ResizeForm
             var player =  i + 1 <= Player.Players.Count ? Player.Players[i] : null;
             card.SetPlayer(player);
         }
-    }
-
-    public static void RefreshPlayers()
-    {
-        Instance?.Invoke(Instance._refreshPlayers);
     }
 
     private class PlayerCard : Control
@@ -96,7 +93,7 @@ public partial class Lobby : ResizeForm
             Console.WriteLine(Player.IsHost);
             NameLabel.Size = Size;
             NameLabel.Text = Player.Name + (Player.IsHost ? " [Host]" : "");
-            NameLabel.Font = new Font(Program.MontserratBold, Height * 0.2f, FontStyle.Bold, GraphicsUnit.Pixel);
+            NameLabel.Font = new Font(Program.MontserratBold, Math.Max(Height * 0.2f, 1), FontStyle.Bold, GraphicsUnit.Pixel);
         }
     }
 }

@@ -64,7 +64,6 @@ public class NetworkManager
 
                     Console.WriteLine($"Got name ({handshakePacket.Name})[{handshakePacket.Id}]{(handshakePacket.IsHost ? " [Host]" : "")} assigned");
                     Player.LocalPlayer = new Player(handshakePacket.Id, handshakePacket.Name, handshakePacket.IsHost);
-                    //Lobby.RefreshPlayers();
                     break;
                 }
                 case PacketType.Track:
@@ -94,7 +93,6 @@ public class NetworkManager
 
                     Console.WriteLine($"Player {joinPacket.Name} ({joinPacket.Id}){(joinPacket.IsHost ? " [Host]" : "")} joined");
                     new Player(joinPacket.Id, joinPacket.Name, joinPacket.IsHost);
-                    Lobby.RefreshPlayers();
                     break;
                 }
                 case PacketType.Leave:
@@ -106,8 +104,7 @@ public class NetworkManager
                         return;
                     }
 
-                    Player.Players.RemoveAll(p => p.Id == leavePacket.Player);
-                    Lobby.RefreshPlayers();
+                    Player.RemovePlayer(Player.Players.Find(p => p.Id == leavePacket.Player) ?? throw new InvalidOperationException());
                     break;
                 }
                 case PacketType.Host:
@@ -120,7 +117,6 @@ public class NetworkManager
                     }
 
                     Player.Players.Find(p => p.Id == hostPacket.Player)?.SetHost(true);
-                    Lobby.RefreshPlayers();
                     break;
                 }
                 case PacketType.Start:
@@ -135,7 +131,7 @@ public class NetworkManager
                 }
                 case PacketType.Confirm:
                 {
-                    Player.CurrentPlayer.ConfirmTrack();
+                    Player.CurrentPlayer?.ConfirmTrack();
                     break;
                 }
                 case PacketType.SwitchTurn:
@@ -147,7 +143,7 @@ public class NetworkManager
                         return;
                     }
 
-                    Player.CurrentPlayer = Player.Players.Find(p => p.Id == turnPacket.Player);
+                    Player.SetCurrentPlayer(Player.Players.Find(p => p.Id == turnPacket.Player) ?? throw new InvalidOperationException());
                     break;
                 }
                 case PacketType.Move:

@@ -70,7 +70,7 @@ public class GameServer
         Clients.Remove(client);
         SendPacketEveryone(new LeavePacket(client.Id));
 
-        if (Clients.Count == 0)
+        if (GameIsStarted && Clients.Count <= 1)
         {
             GameIsStarted = false;
             foreach (var c in Clients)

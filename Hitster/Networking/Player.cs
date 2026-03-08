@@ -4,7 +4,28 @@ public class Player
 {
     public static List<Player> Players = new List<Player>();
     public static Player LocalPlayer;
-    public static Player CurrentPlayer;
+    public static Player? CurrentPlayer { get; private set; }
+
+    public static event Action? PlayerDataChanged;
+
+    public static void SetCurrentPlayer(Player player)
+    {
+        CurrentPlayer = player;
+        PlayerDataChanged?.Invoke();
+    }
+
+    public static void AddPlayer(Player player)
+    {
+        Players.Add(player);
+        Players.Sort((x, y) => x.Id.CompareTo(y.Id));
+        PlayerDataChanged?.Invoke();
+    }
+
+    public static void RemovePlayer(Player player)
+    {
+        Players.Remove(player);
+        PlayerDataChanged?.Invoke();
+    }
 
     public int Id { get; }
     public string Name { get; }
@@ -19,15 +40,13 @@ public class Player
         IsHost = isHost;
         AllTracks = new List<TrackData>();
         
-        Players.Add(this);
-        Players.Sort((x, y) => x.Id.CompareTo(y.Id));
-        if (id == 0)
-            CurrentPlayer = this;
+        AddPlayer(this);
     }
 
     public void SetHost(bool isHost)
     {
         IsHost = isHost;
+        PlayerDataChanged?.Invoke();
     }
 
     public void PlaceCurrentTrack(int index, TrackData? track = null)

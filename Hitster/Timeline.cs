@@ -40,9 +40,12 @@ public class Timeline : Panel
             Controls.Remove(card);
             card.Dispose();
         }
+        _cards.Clear();
         foreach (var t in _player.AllTracks)
         {
             var card = new Card(t);
+            if (_player.CurrentTrack != t)
+                card.MarkAsConfirmed(false);
             _cards.Add(card);
         }
         
