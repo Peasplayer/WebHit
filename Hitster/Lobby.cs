@@ -2,25 +2,101 @@ using Hitster.Networking;
 
 namespace Hitster;
 
-public partial class Lobby : Form
+public partial class Lobby : ResizeForm
 {
     public static Lobby? Instance { get; private set; }
     
-    private Button Startbtn;
+    private Button StartButton { get; }
+    private List<PlayerCard> Cards { get; }
+    
     public Lobby()
     {
         Instance = this;
         FormClosing += (_, _) => Instance = null;
         InitializeComponent();
         
-        Startbtn = new Button
+        StartButton = new Button
         {
             Cursor = Cursors.Hand,
+            Text = "Start",
+            Visible = false
         };
-        Startbtn.Click += (_, _) =>
+        StartButton.Click += (_, _) => NetworkManager.Instance.RpcStart();
+        Controls.Add(StartButton);
+        RegisterResizeControl(StartButton, new SizeF(3, 1), new PointF(14.5f, 14), () =>
         {
-            NetworkManager.Instance.RpcStart();
-        };
-       Controls.Add(Startbtn);
+            StartButton.Font = new Font(Program.MontserratBold, StartButton.Height * 0.8f, FontStyle.Bold, GraphicsUnit.Pixel);
+        });
+        
+        Cards = new List<PlayerCard>();
+
+        for (int i = 0; i < 6; i++)
+        {
+            var card = new PlayerCard();
+            Cards.Add(card);
+            Controls.Add(card);
+            RegisterResizeControl(card, new SizeF(6, 3), new PointF(6 + i % 3 * 7, 4 + (i / 3) * 4), card.Render);
+        }
+        _refreshPlayers();
+    }
+
+    private void _refreshPlayers()
+    {
+        StartButton.Visible = Player.LocalPlayer.IsHost;
+        for (int i = 0; i < 6; i++)
+        {
+            var card = Cards[i];
+            var player =  i + 1 <= Player.Players.Count ? Player.Players[i] : null;
+            card.SetPlayer(player);
+        }
+    }
+
+    public static void RefreshPlayers()
+    {
+        Instance?.Invoke(Instance._refreshPlayers);
+    }
+
+    private class PlayerCard : Control
+    {
+        public Player? Player { get; private set; }
+        
+        private Label NameLabel { get; }
+
+        public PlayerCard()
+        {
+            BackColor = Color.BurlyWood;
+            NameLabel = new Label();
+            NameLabel.TextAlign = ContentAlignment.MiddleCenter;
+            Controls.Add(NameLabel);
+        }
+
+        public void SetPlayer(Player? player)
+        {
+            Player = player;
+            if (Player != null)
+            {
+                NameLabel.Text = Player.Name;
+                BackColor = Player.LocalPlayer == Player ? Color.RosyBrown : Color.Brown;
+                NameLabel.Visible = true;
+            }
+            else
+            {
+                BackColor = Color.BurlyWood;
+                NameLabel.Visible = false;
+            }
+            
+            Render();
+        }
+
+        public void Render()
+        {
+            if (Player == null)
+                return;
+
+            Console.WriteLine(Player.IsHost);
+            NameLabel.Size = Size;
+            NameLabel.Text = Player.Name + (Player.IsHost ? " [Host]" : "");
+            NameLabel.Font = new Font(Program.MontserratBold, Height * 0.2f, FontStyle.Bold, GraphicsUnit.Pixel);
+        }
     }
 }

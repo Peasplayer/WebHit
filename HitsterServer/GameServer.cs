@@ -46,7 +46,7 @@ public class GameServer
     }
 
     private void OnConnect(IWebSocketConnection connection) {
-        if (GameIsStarted)
+        if (GameIsStarted || Clients.Count >= 6)
         {
             connection.Close();
             return;
@@ -70,7 +70,7 @@ public class GameServer
         Clients.Remove(client);
         SendPacketEveryone(new LeavePacket(client.Id));
 
-        if (Clients.Count <= 1)
+        if (Clients.Count == 0)
         {
             GameIsStarted = false;
             foreach (var c in Clients)

@@ -10,6 +10,6 @@ public class HandshakePacket : Packet
     {
         Name = name;
         Id = id;
-        IsHost = false;
+        IsHost = isHost;
     }
 }
