@@ -10,5 +10,6 @@ public enum PacketType : uint
     Track,
     Confirm,
     Move,
-    SwitchTurn
+    SwitchTurn,
+    Win
 }

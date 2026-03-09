@@ -5,7 +5,7 @@ namespace Hitster;
 
 public partial class Form1 : ResizeForm
 {
-    public static Form1? Instance { get; private set; }
+    private static Form1? _instance;
 
     private Timeline OwnTimeline { get; }
     private Timeline OtherTimeline { get; }
@@ -14,7 +14,7 @@ public partial class Form1 : ResizeForm
     
     public Form1()
     {
-        Instance = this;
+        _instance = this;
         FormClosing += (_, _) => Lobby.Instance?.Close();
         InitializeComponent();
         
@@ -41,7 +41,7 @@ public partial class Form1 : ResizeForm
         Player.PlayerDataChanged += () => Invoke(RenderPlayers);
     }
 
-    public void PlayTrack(TrackData track)
+    public void _PlayTrack(TrackData track)
     {
         if (_musicPlayer != null)
             _musicPlayer.Stop();
@@ -99,5 +99,20 @@ public partial class Form1 : ResizeForm
             };
             playerCard.Controls.Add(nameLabel);
         }
+    }
+
+    private void _PlayerWon(Player player)
+    {
+        MessageBox.Show($"{(Player.LocalPlayer == player ? "Du hast " : player.Name + " hat")} gewonnen!", "Hitster Won", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    public static void PlayTrack(TrackData track)
+    {
+        _instance?.Invoke(() => _instance._PlayTrack(track));
+    }
+
+    public static void PlayerWon(Player player)
+    {
+        _instance?.Invoke(() => _instance._PlayerWon(player));
     }
 }

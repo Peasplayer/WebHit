@@ -56,7 +56,7 @@ public class Player
             if (AllTracks.Count != 0)
             {
                 CurrentTrack = track;
-                Form1.Instance.Invoke(() => Form1.Instance.PlayTrack(track));
+                Form1.PlayTrack(track);
             }
             AllTracks.Add(track);
         }

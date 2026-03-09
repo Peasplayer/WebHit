@@ -44,7 +44,7 @@ public partial class Lobby : ResizeForm
 
     private void _refreshPlayers()
     {
-        StartButton.Visible = Player.LocalPlayer.IsHost;
+        StartButton.Visible = Player.LocalPlayer?.IsHost ?? false;
         for (int i = 0; i < 6; i++)
         {
             var card = Cards[i];

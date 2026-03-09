@@ -155,7 +155,19 @@ public class NetworkManager
                         return;
                     }
 
-                    Player.CurrentPlayer.PlaceCurrentTrack(movePacket.Index);
+                    Player.CurrentPlayer?.PlaceCurrentTrack(movePacket.Index);
+                    break;
+                }
+                case PacketType.Win:
+                {
+                    var winPacket = JsonConvert.DeserializeObject<WinPacket>(msg);
+                    if (winPacket == null)
+                    {
+                        Console.WriteLine("Received malformed packet!");
+                        return;
+                    }
+
+                    Form1.PlayerWon(Player.Players.Find(p => p.Id == winPacket.Player) ?? throw new InvalidOperationException());
                     break;
                 }
             }
@@ -187,5 +199,12 @@ public class NetworkManager
         if (Player.CurrentPlayer.Id != Player.LocalPlayer.Id)
             return;
         SendPacket(new MovePacket(index));
+    }
+
+    public void RpcPlayerWon(Player player)
+    {
+        if (Player.CurrentPlayer.Id != Player.LocalPlayer.Id)
+            return;
+        SendPacket(new WinPacket(player.Id));
     }
 }

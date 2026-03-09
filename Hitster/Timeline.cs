@@ -88,6 +88,11 @@ public class Timeline : Panel
                             _player.AllTracks.Remove(t);
                             UpdateTimeline(_player);
                         });
+                    
+                    if (_player.AllTracks.Count == 3 && !wrong && Player.LocalPlayer == _player)
+                    {
+                        NetworkManager.Instance.RpcPlayerWon(_player);
+                    }
                 }
                 cards.Add(card);
             }

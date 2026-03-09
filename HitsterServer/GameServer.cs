@@ -163,6 +163,9 @@ public class GameServer
                 SendPacketEveryone(rawPacket);
                 await Task.Delay(5000);
 
+                if (!GameIsStarted)
+                    return;
+
                 var index = Clients.IndexOf(client);
                 CurrentPlayer = (index + 1 >= Clients.Count ? Clients[0] : Clients[index + 1]).Id;
                 SendPacketEveryone(new TurnPacket(CurrentPlayer));
@@ -182,6 +185,24 @@ public class GameServer
                 }
                 
                 SendPacketEveryone(packet);
+                break;
+            }
+            case PacketType.Win:
+            {
+                if (client.Id != CurrentPlayer)
+                    return;
+                
+                var packet = JsonConvert.DeserializeObject<WinPacket>(msg);
+                if (packet == null)
+                {
+                    FleckLog.Warn($"<{client.Id}> Malformed Packet received!");
+                    return;
+                }
+                
+                SendPacketEveryone(packet);
+                GameIsStarted = false;
+                foreach (var c in Clients)
+                    c.Connection.Close();
                 break;
             }
         }
