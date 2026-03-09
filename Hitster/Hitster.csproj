@@ -15,4 +15,10 @@
       <EmbeddedResource Include="Resources/*"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="GuessForm.cs">
+        <SubType>Form</SubType>
+      </Compile>
+    </ItemGroup>
+
 </Project>
