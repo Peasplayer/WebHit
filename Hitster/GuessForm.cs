@@ -1,15 +1,15 @@
-﻿using Hitster.Networking;
+﻿using System.Net.Http.Headers;
+using Hitster.Networking;
+using Newtonsoft.Json;
 
 namespace Hitster;
 
 public partial class GuessForm : Form
 {
-    private TextBox titleInput; //Textbos zum Eingeben des liedtitels
+    private ComboBox titleInput; //Box zum Auswähle des Liedtitels
     private ComboBox artistInput; //Box zum Auswählen des Interpreten
     private Button confirmButton; //Knopf zum bestätigen der Eingabe
     private Label feedbackLabel; //Anzeige des Ergebnisses
-
-    public static List<string> AllArtists = new(); //Liste für alle Interpreten
 
     public GuessForm()
     {
@@ -24,8 +24,6 @@ public partial class GuessForm : Form
         BackColor = Color.FromArgb(40, 40, 40);
         ForeColor = Color.White;
 
-        LoadArtists();
-
         //Label als Makierung damit der Nutzer weiß was er eingeben soll
         var titleLabel = new Label
         {
@@ -37,11 +35,37 @@ public partial class GuessForm : Form
         Controls.Add(titleLabel);
 
         //TextBox zum eingeben des Liedtitels
-        titleInput = new TextBox
+        titleInput = new ComboBox()
         {
             Location = new Point(120, 20),
             Width = 230,
-            Font = new Font(Program.MontserratSemiBold, 12, GraphicsUnit.Pixel)
+            Font = new Font(Program.MontserratSemiBold, 12, GraphicsUnit.Pixel),
+            Tag = null
+        };
+        titleInput.KeyDown += async (sender, e) => //Verhindert das der Nutzer etwas eingeben kann was nicht in der Liste ist
+        {
+            if (e.KeyData == Keys.Enter && titleInput.Tag == null)
+            {
+                titleInput.Tag = "locked"; //Verhindert das die Eingabe mehrmals bestätigt wird
+                Console.WriteLine(titleInput.Text);
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.UserAgent.Clear();
+                client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("WebHit-Test", "0.0.1"));
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                var str = await client.GetStringAsync(
+                    $"https://api.deezer.com/search/track?q={titleInput.Text}&limit=5");
+                var result = JsonConvert.DeserializeAnonymousType(str, 
+                    new { data = new[] { new { title_short = "" } } });
+                foreach (var r in result.data)
+                {
+                    titleInput.Items.Add(r.title_short);
+                }
+                titleInput.ResetText();
+                titleInput.DropDownStyle = ComboBoxStyle.DropDownList;
+                titleInput.SelectedIndex = 0;
+            }
         };
         Controls.Add(titleInput);
     
@@ -61,18 +85,34 @@ public partial class GuessForm : Form
             Location = new Point(120, 60),
             Width = 230,
             Font = new Font(Program.MontserratSemiBold, 12, GraphicsUnit.Pixel),
-            AutoCompleteMode = AutoCompleteMode.SuggestAppend, //Damit der Nutzer den Interpreten richtig schreibt damit keine überprüfung nötig ist
-            AutoCompleteSource = AutoCompleteSource.CustomSource
+            Tag = null
+        };
+        artistInput.KeyDown += async (sender, e) => //Verhindert das der Nutzer etwas eingeben kann was nicht in der Liste ist
+        {
+            if (e.KeyData == Keys.Enter && artistInput.Tag == null)
+            {
+                artistInput.Tag = "locked"; //Verhindert das die Eingabe mehrmals bestätigt wird
+                Console.WriteLine(artistInput.Text);
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.UserAgent.Clear();
+                client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("WebHit-Test", "0.0.1"));
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                var str = await client.GetStringAsync(
+                    $"https://api.deezer.com/search/artist?q={artistInput.Text}&limit=5");
+                var result = JsonConvert.DeserializeAnonymousType(str, 
+                    new { data = new[] { new { name = "" } } });
+                foreach (var r in result.data)
+                {
+                    artistInput.Items.Add(r.name);
+                }
+                artistInput.ResetText();
+                artistInput.DropDownStyle = ComboBoxStyle.DropDownList;
+                artistInput.SelectedIndex = 0;
+            }
         };
         Controls.Add(artistInput);
-
-        //Fügt alle Interpreten in die ComboBox als auswahl ein
-        var artistsArray = AllArtists.ToArray(); //Wandelt die Liste der Interpreten in ein Array um damit es in der ComboBox angezeigt werden kann
-        var autoComplete = new AutoCompleteStringCollection();
-        autoComplete.AddRange(artistsArray);
-
-        artistInput.AutoCompleteCustomSource = autoComplete;
-        artistInput.Items.AddRange(artistsArray);
 
         //Button zum bestätigen der Eingabe
         confirmButton = new Button
@@ -100,28 +140,6 @@ public partial class GuessForm : Form
             Font = new Font(Program.MontserratBold, 14, GraphicsUnit.Pixel)
         };
         Controls.Add(feedbackLabel);
-    }
-
-    //Speichert für alle Spieler die Interpreten der gelegten Songs in eine Liste
-    private void LoadArtists()
-    {
-        AllArtists.Clear();
-
-        foreach (var player in Player.Players)
-        {
-            foreach (var track in player.AllTracks)
-            {
-                if (!AllArtists.Contains(track.Artist))
-                {
-                    AllArtists.Add(track.Artist);
-                }
-            }
-
-            if (player.CurrentTrack != null && !AllArtists.Contains(player.CurrentTrack.Artist))
-            {
-                AllArtists.Add(player.CurrentTrack.Artist);
-            }
-        }
     }
 
     //Wenn der Überorüfen Knopf gedrückt wird wird überprüft ob die Eingabe richtig ist 

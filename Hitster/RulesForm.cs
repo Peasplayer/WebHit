@@ -10,21 +10,11 @@ public partial class RulesForm : Form
 
     private Button nextButton;
     private Button backButton;
-    private Button mainMenuButton;
-    
     public RulesForm()
     {
         InitializeComponent();
         SetupUI();
         ShowChapter(currentRuleChapter);
-
-        this.Closing += (_, _) =>
-        {
-            var form = new Lobby();
-            form.StartPosition = FormStartPosition.Manual;
-            form.Location = Location;
-            form.Show();
-        };
     }
 
     private void SetupUI()
@@ -89,17 +79,6 @@ public partial class RulesForm : Form
         };
         nextButton.Click += NextButton_Click;
         Controls.Add(nextButton);
-
-        //Button um zur Lobby zurückzukehren
-        mainMenuButton = new Button()
-        {
-            Text = "Lobby",
-            Width = 120,
-            Height = 40,
-            Location = new Point(390, 470)
-        };
-        mainMenuButton.Click += (_, _) => this.Close();
-        Controls.Add(mainMenuButton);
     }
 
     //Regel "Kapitel" wird runtergezählt da auf den zurück Button geklickt wurde

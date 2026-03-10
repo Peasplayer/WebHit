@@ -36,7 +36,7 @@ public partial class Lobby : ResizeForm
             Text = "Regeln",
             Visible = true 
         };
-        RulesButton.Click += (_, _) => new RulesForm().ShowDialog(this);
+        RulesButton.Click += (_, _) => new GuessForm().ShowDialog(this);
         Controls.Add(RulesButton);
         //Wird genau unter dem Start Button plazier egal wie groß das Forms ist
         RegisterResizeControl(RulesButton, new SizeF(3, 1), new PointF(14.5f, 15.5f), () =>
