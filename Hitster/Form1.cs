@@ -24,7 +24,7 @@ public partial class Form1 : ResizeForm
         Controls.Add(OwnTimeline);
 
         OtherTimeline = new Timeline();
-        OtherTimeline.SetPlayer(Player.Players.Find(p => p.Id != Player.LocalPlayer.Id));
+        OtherTimeline.SetPlayer(Player.AllPlayers.Find(p => p.Id != Player.LocalPlayer.Id));
         RegisterResizeControl(OtherTimeline, new SizeF(30, 3.5f), new PointF(1, 10), OtherTimeline.AfterResize);
         Controls.Add(OtherTimeline);
 
@@ -66,7 +66,7 @@ public partial class Form1 : ResizeForm
         }
         PlayerArea.Controls.Clear();
 
-        foreach (var player in Player.Players)
+        foreach (var player in Player.AllPlayers)
         {
             var pad = new Padding((int) (PlayerArea.Width / 6f * 0.05f), (int) (PlayerArea.Height * 0.05f), 
                 (int) (PlayerArea.Width / 6f * 0.05f), (int) (PlayerArea.Height * 0.05f));
@@ -98,6 +98,20 @@ public partial class Form1 : ResizeForm
                     OtherTimeline.SetPlayer(player);
             };
             playerCard.Controls.Add(nameLabel);
+            
+            var tokenLabel = new Label
+            {
+                Text = "Tokens: " + player.Tokens,
+                Size = new Size(playerCard.Width, (int)(playerCard.Height * 0.2f)),
+                Location = new Point(0, nameLabel.Height),
+                Font = new Font(Program.MontserratSemiBold, playerCard.Height * 0.1f, FontStyle.Bold, GraphicsUnit.Pixel)
+            };
+            tokenLabel.Click += (_, _) =>
+            {
+                if (player != Player.LocalPlayer)
+                    OtherTimeline.SetPlayer(player);
+            };
+            playerCard.Controls.Add(tokenLabel);
         }
     }
 
@@ -114,5 +128,10 @@ public partial class Form1 : ResizeForm
     public static void PlayerWon(Player player)
     {
         _instance?.Invoke(() => _instance._PlayerWon(player));
+    }
+
+    public static void SetOtherTimeline(Player player)
+    {
+        _instance?.Invoke(() => _instance.OtherTimeline.SetPlayer(player));
     }
 }

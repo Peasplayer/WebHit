@@ -13,6 +13,7 @@ public partial class Lobby : ResizeForm
     {
         Instance = this;
         FormClosing += (_, _) => Instance = null;
+        WindowState = FormWindowState.Maximized; //macht Vollbild
         InitializeComponent();
         
         StartButton = new Button
@@ -48,7 +49,7 @@ public partial class Lobby : ResizeForm
         for (int i = 0; i < 6; i++)
         {
             var card = Cards[i];
-            var player =  i + 1 <= Player.Players.Count ? Player.Players[i] : null;
+            var player =  i + 1 <= Player.AllPlayers.Count ? Player.AllPlayers[i] : null;
             card.SetPlayer(player);
         }
     }
@@ -90,7 +91,6 @@ public partial class Lobby : ResizeForm
             if (Player == null)
                 return;
 
-            Console.WriteLine(Player.IsHost);
             NameLabel.Size = Size;
             NameLabel.Text = Player.Name + (Player.IsHost ? " [Host]" : "");
             NameLabel.Font = new Font(Program.MontserratBold, Math.Max(Height * 0.2f, 1), FontStyle.Bold, GraphicsUnit.Pixel);

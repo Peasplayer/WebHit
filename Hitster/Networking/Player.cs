@@ -2,9 +2,10 @@ namespace Hitster.Networking;
 
 public class Player
 {
-    public static List<Player> Players = new List<Player>();
+    public static List<Player> AllPlayers = new List<Player>();
     public static Player LocalPlayer;
     public static Player? CurrentPlayer { get; private set; }
+    public static Dictionary<int, int> TokenGuesses { get; } = new Dictionary<int, int>();
 
     public static event Action? PlayerDataChanged;
 
@@ -16,15 +17,23 @@ public class Player
 
     public static void AddPlayer(Player player)
     {
-        Players.Add(player);
-        Players.Sort((x, y) => x.Id.CompareTo(y.Id));
+        AllPlayers.Add(player);
+        AllPlayers.Sort((x, y) => x.Id.CompareTo(y.Id));
         PlayerDataChanged?.Invoke();
     }
 
     public static void RemovePlayer(Player player)
     {
-        Players.Remove(player);
+        AllPlayers.Remove(player);
         PlayerDataChanged?.Invoke();
+    }
+
+    public static Player GetPlayer(int id)
+    {
+        var p = AllPlayers.Find(p => p.Id == id);
+        if (p == null)
+            throw new InvalidOperationException($"Player with id {id} not found");
+        return p;
     }
 
     public int Id { get; }
@@ -32,6 +41,7 @@ public class Player
     public bool IsHost { get; private set; }
     public List<TrackData> AllTracks { get; }
     public TrackData? CurrentTrack { get; private set; }
+    public int Tokens { get; private set; }
     
     public Player(int id, string name, bool isHost)
     {
@@ -39,6 +49,7 @@ public class Player
         Name = name;
         IsHost = isHost;
         AllTracks = new List<TrackData>();
+        Tokens = 2;
         
         AddPlayer(this);
     }
@@ -46,6 +57,15 @@ public class Player
     public void SetHost(bool isHost)
     {
         IsHost = isHost;
+        PlayerDataChanged?.Invoke();
+    }
+
+    public void AddTokens(int tokens)
+    {
+        var newBalance = Tokens + tokens;
+        if (newBalance < 0 || newBalance > 5)
+            return;
+        Tokens = newBalance;
         PlayerDataChanged?.Invoke();
     }
 
@@ -69,9 +89,22 @@ public class Player
         Timeline.UpdateTimeline(this);
     }
 
-    public void ConfirmTrack()
+    public void AddTrack(TrackData track)
     {
-        CurrentTrack = null;
+        AllTracks.Add(track);
+        AllTracks.Sort((t1, t2) => t1.ReleaseYear.CompareTo(t2.ReleaseYear));
         Timeline.UpdateTimeline(this);
+    }
+
+    public void LooseTrack(TrackData track)
+    {
+        AllTracks.Remove(track);
+        Timeline.UpdateTimeline(this);
+    }
+
+    public void RevealCurrentTrack()
+    {
+        Timeline.RevealTrack(this, CurrentTrack);
+        CurrentTrack = null;
     }
 }

@@ -5,6 +5,7 @@ namespace Hitster;
 public class Timeline : Panel
 {
     private static List<Timeline> _timelines = new List<Timeline>();
+    public static bool AllowTokenPlacement { get; private set; }
 
     public static void UpdateTimeline(Player p)
     {
@@ -12,6 +13,24 @@ public class Timeline : Panel
         {
             if (t._player?.Id == p.Id)
                 t.Invoke(t.UpdateTracks);
+        }
+    }
+
+    public static void ToggleTokenPlacement(bool allow)
+    {
+        AllowTokenPlacement = allow;
+        foreach (var t in _timelines)
+        {
+            t.Invoke(t.UpdateTracks);
+        }
+    }
+    
+    public static void RevealTrack(Player p, TrackData track)
+    {
+        foreach (var t in _timelines)
+        {
+            if (t._player?.Id == p.Id)
+                t.Invoke(() => t.RevealTrack(track));
         }
     }
     
@@ -26,12 +45,10 @@ public class Timeline : Panel
         Render();
     }
 
-    public void SetPlayer(Player player)
+    public void SetPlayer(Player? player)
     {
-        if (_player != null && _player.Id == player.Id)
-        {
+        if (player == null || _player?.Id == player.Id)
             return;
-        }
         
         _player = player;
         
@@ -52,6 +69,48 @@ public class Timeline : Panel
         Render();
     }
 
+    private void RevealTrack(TrackData track)
+    {
+        var cardIndex = _cards.FindIndex(c => c.Track == track);
+        var card = _cards[cardIndex];
+        var wrong =
+            (cardIndex != 0 && track.ReleaseYear < _cards[cardIndex - 1].Track.ReleaseYear) ||
+            (cardIndex < _cards.Count - 1 &&
+             track.ReleaseYear > _cards[cardIndex + 1].Track.ReleaseYear);
+            card.MarkAsConfirmed(wrong);
+        if (wrong)
+        {
+            // Lokaler Spieler sucht gesetzten, Token der richtig ist und übergibt den Track
+            if (Player.LocalPlayer == _player)
+            {
+                foreach (var guess in Player.TokenGuesses)
+                {
+                    var guessedWrong =
+                        (guess.Value != 0 && track.ReleaseYear < _cards[guess.Value - 1].Track.ReleaseYear) ||
+                        (guess.Value < _cards.Count - 1 &&
+                         track.ReleaseYear > _cards[guess.Value + 1].Track.ReleaseYear);
+                    
+                    if (!guessedWrong)
+                    {
+                        NetworkManager.Instance.RpcTokenRight(Player.GetPlayer(guess.Key), track);
+                        break;
+                    }
+                }
+                Player.TokenGuesses.Clear();
+            }
+            
+            // Entfernt die Karte nach 3 Sekunden wenn sie falsch ist
+            Task.Run(() =>
+            {
+                Task.Delay(3000).Wait();
+                _player?.LooseTrack(track);
+            });
+        }
+        
+        CheckForWin();
+        Render();
+    }
+
     private void UpdateTracks()
     {
         if (_player == null)
@@ -62,38 +121,16 @@ public class Timeline : Panel
             var cards = new List<Card>();
             foreach (var t in _player.AllTracks)
             {
-                var cardIndex = _cards.FindIndex(c => c.Track.Id == t.Id);
-                Card card;
-                if (cardIndex == -1)
+                var card = _cards.Find(c => c.Track.Id == t.Id);
+                if (card == null)
                 {
                     card = new Card(t);
                     _cards.Add(card);
                 }
-                else
-                    card = _cards[cardIndex];
+                
+                if (!card.IsRevealed && _player.CurrentTrack != t)
+                    card.MarkAsConfirmed(false);
 
-                if (_player.CurrentTrack != t && !card.IsConfirmed)
-                {
-                    var wrong =
-                        (_cards.IndexOf(card) != 0 && t.ReleaseYear < _cards[cardIndex - 1].Track.ReleaseYear) ||
-                        (_cards.IndexOf(card) != _cards.Count - 1 &&
-                         t.ReleaseYear > _cards[cardIndex + 1].Track.ReleaseYear);
-                    card.MarkAsConfirmed(wrong);
-                    
-                    // Entfernt die Karte nach 3 Sekunden wenn sie falsch ist
-                    if (wrong)
-                        Task.Run(() =>
-                        {
-                            Task.Delay(3000).Wait();
-                            _player.AllTracks.Remove(t);
-                            UpdateTimeline(_player);
-                        });
-                    
-                    if (_player.AllTracks.Count == 3 && !wrong && Player.LocalPlayer == _player)
-                    {
-                        NetworkManager.Instance.RpcPlayerWon(_player);
-                    }
-                }
                 cards.Add(card);
             }
 
@@ -109,6 +146,7 @@ public class Timeline : Panel
             }
 
             _cards = cards;
+            CheckForWin();
             Render();
         }
         catch (Exception e)
@@ -152,16 +190,28 @@ public class Timeline : Panel
             card.Location = new Point(startX + card.Width * cardIndex, Height - card.Height);
             Controls.Add(card);
 
-            if (_player != Player.LocalPlayer || Player.CurrentPlayer != Player.LocalPlayer || Player.LocalPlayer.CurrentTrack == null)
-                continue;
+            if ((_player == Player.LocalPlayer && Player.CurrentPlayer == Player.LocalPlayer &&
+                 _cards.Find(c => !c.IsRevealed) != null && !AllowTokenPlacement) || 
+                (_player != Player.LocalPlayer && _player == Player.CurrentPlayer && AllowTokenPlacement 
+                 && Player.LocalPlayer.Tokens > 0 && !Player.TokenGuesses.ContainsKey(Player.LocalPlayer.Id)))
+            {
+                if (cardIndex == 0 && card.IsRevealed && (!AllowTokenPlacement || !Player.TokenGuesses.ContainsValue(cardIndex)))
+                    CreateSlot(0, card.Location.X);
+                if (card.IsRevealed && (cardIndex == _cards.Count - 1 || _cards[cardIndex + 1].IsRevealed) && (!AllowTokenPlacement || !Player.TokenGuesses.ContainsValue(cardIndex)))
+                    CreateSlot(slotIndex, card.Location.X + card.Size.Width);
             
-            if (cardIndex == 0 && card.IsConfirmed)
-                CreateSlot(0, card.Location.X);
-            if (card.IsConfirmed && (cardIndex == _cards.Count - 1 || _cards[cardIndex + 1].IsConfirmed))
-                CreateSlot(slotIndex, card.Location.X + card.Size.Width);
-            
-            if (card.IsConfirmed)
-                slotIndex++;
+                if (card.IsRevealed)
+                    slotIndex++;
+            }
+        }
+    }
+
+    private void CheckForWin()
+    {
+        var count = _cards.FindAll(c => c.IsRevealed && c.IsCorrect).Count;
+        if (count == 3 && Player.LocalPlayer == _player)
+        {
+            NetworkManager.Instance.RpcPlayerWon(_player);
         }
     }
 
@@ -174,7 +224,13 @@ public class Timeline : Panel
             BackColor = Color.AliceBlue,
         };
         slot.Location = new Point(middle - slot.Width / 2, 0);
-        slot.Click += (_, _) => NetworkManager.Instance.RpcMoveCurrentTrack(index);
+        slot.Click += (_, _) =>
+        {
+            if (AllowTokenPlacement)
+                NetworkManager.Instance.RpcPlaceToken(index);
+            else
+                NetworkManager.Instance.RpcMoveCurrentTrack(index);
+        };
         Controls.Add(slot);
         _activeSlots.Add(slot);
     }

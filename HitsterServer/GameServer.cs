@@ -162,6 +162,8 @@ public class GameServer
                 
                 SendPacketEveryone(rawPacket);
                 await Task.Delay(5000);
+                SendPacketEveryone(new Packet(PacketType.Reveal));
+                await Task.Delay(5000);
 
                 if (!GameIsStarted)
                     return;
@@ -170,6 +172,33 @@ public class GameServer
                 CurrentPlayer = (index + 1 >= Clients.Count ? Clients[0] : Clients[index + 1]).Id;
                 SendPacketEveryone(new TurnPacket(CurrentPlayer));
                 SendPacketEveryone(new TrackPacket(await MusicManager.GetRandomTrack(), CurrentPlayer));
+                break;
+            }
+            case PacketType.Token:
+            {
+                if (client.Id == CurrentPlayer)
+                    return;
+                
+                var packet = JsonConvert.DeserializeObject<TokenPacket>(msg);
+                if (packet == null)
+                {
+                    FleckLog.Warn($"<{client.Id}> Malformed Packet received!");
+                    return;
+                }
+                
+                SendPacketEveryone(packet);
+                break;
+            }
+            case PacketType.TokenCorrect:
+            {
+                var packet = JsonConvert.DeserializeObject<TokenCorrectPacket>(msg);
+                if (packet == null)
+                {
+                    FleckLog.Warn($"<{client.Id}> Malformed Packet received!");
+                    return;
+                }
+
+                SendPacketEveryone(packet);
                 break;
             }
             case PacketType.Move:
@@ -189,9 +218,6 @@ public class GameServer
             }
             case PacketType.Win:
             {
-                if (client.Id != CurrentPlayer)
-                    return;
-                
                 var packet = JsonConvert.DeserializeObject<WinPacket>(msg);
                 if (packet == null)
                 {
