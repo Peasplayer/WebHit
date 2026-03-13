@@ -7,6 +7,7 @@ public partial class Lobby : ResizeForm
     public static Lobby? Instance { get; private set; }
     
     private Button StartButton { get; }
+    private Button RulesButton { get; }
     private List<PlayerCard> Cards { get; }
     
     public Lobby()
@@ -26,6 +27,21 @@ public partial class Lobby : ResizeForm
         RegisterResizeControl(StartButton, new SizeF(3, 1), new PointF(14.5f, 14), () =>
         {
             StartButton.Font = new Font(Program.MontserratBold, Math.Max(StartButton.Height * 0.8f, 1), FontStyle.Bold, GraphicsUnit.Pixel);
+        });
+        
+        //Button um zu den Regeln zu kommen
+        RulesButton = new Button
+        {
+            Cursor = Cursors.Hand,
+            Text = "Regeln",
+            Visible = true 
+        };
+        RulesButton.Click += (_, _) => new RulesForm().ShowDialog(this);
+        Controls.Add(RulesButton);
+        //Wird genau unter dem Start Button plazier egal wie groß das Forms ist
+        RegisterResizeControl(RulesButton, new SizeF(3, 1), new PointF(14.5f, 15.5f), () =>
+        {
+            RulesButton.Font = new Font(Program.MontserratBold, Math.Max(RulesButton.Height * 0.6f, 1), FontStyle.Bold, GraphicsUnit.Pixel);
         });
         
         Cards = new List<PlayerCard>();
