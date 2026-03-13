@@ -52,7 +52,18 @@ public sealed class Card : Panel
         Click += (_, _) =>
         {
             if (!IsConfirmed && Player.CurrentPlayer == Player.LocalPlayer)
+            {
+                //Wenn das Lied vom Lokalem Spieler ist kann er das Lied Raten
+                var guess = MessageBox.Show("Frage", "Möchtest du den Track eraten?", MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (guess == DialogResult.Yes)
+                {
+                    var guessForm = new GuessForm();
+                    guessForm.ShowDialog();
+                }
                 NetworkManager.Instance.RpcConfirmTrack();
+            }
         };
     }
 

@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using System.Text.RegularExpressions;
 using Hitster.Networking;
 using Newtonsoft.Json;
 
@@ -60,7 +61,8 @@ public partial class GuessForm : Form
                     new { data = new[] { new { title_short = "" } } });
                 foreach (var r in result.data)
                 {
-                    titleInput.Items.Add(r.title_short);
+                    if (!titleInput.Items.Contains(r.title_short))
+                        titleInput.Items.Add(r.title_short);
                 }
                 titleInput.ResetText();
                 titleInput.DropDownStyle = ComboBoxStyle.DropDownList;
@@ -105,7 +107,8 @@ public partial class GuessForm : Form
                     new { data = new[] { new { name = "" } } });
                 foreach (var r in result.data)
                 {
-                    artistInput.Items.Add(r.name);
+                    if (!artistInput.Items.Contains(r.name))
+                        artistInput.Items.Add(r.name);
                 }
                 artistInput.ResetText();
                 artistInput.DropDownStyle = ComboBoxStyle.DropDownList;
@@ -147,16 +150,16 @@ public partial class GuessForm : Form
     {
         var currentTrack = Player.LocalPlayer?.CurrentTrack;
         
-        var inputTitle = RemoveSpecialCaracters(titleInput.Text);
+        /*var inputTitle = RemoveSpecialCaracters(titleInput.Text);
         var inputArtist = RemoveSpecialCaracters(artistInput.Text);
 
         var realTitle = RemoveSpecialCaracters(currentTrack.Name);
-        var realArtist = RemoveSpecialCaracters(currentTrack.Artist);
+        var realArtist = RemoveSpecialCaracters(currentTrack.Artist);*/
 
-        bool titleCorrect = realTitle.Contains(inputTitle);
-        bool artistCorrect = realArtist.Contains(inputArtist);
+        var titleMatch = CompareStrings(currentTrack.Name, titleInput.Text);
+        var artistMatch = CompareStrings(currentTrack.Artist, artistInput.Text);
 
-        if (titleCorrect && artistCorrect)
+        if (titleMatch > 90 && artistMatch > 90)
         {
             feedbackLabel.Text = "Richtig! Du erhältst einen Token";
             feedbackLabel.ForeColor = Color.LightGreen;
@@ -182,5 +185,68 @@ public partial class GuessForm : Form
         text = text.Replace("-", "");
 
         return text;
+    }
+    
+    // Quelle: https://medium.com/@tarakshah/this-article-explains-how-to-check-the-similarity-between-two-string-in-percentage-or-score-from-0-83e206bf6bf5
+    private static double CompareStrings(string str1, string str2)
+    {
+        var pairs1 = WordLetterPairs(str1.ToUpper());
+        var pairs2 = WordLetterPairs(str2.ToUpper());
+
+        int intersection = 0;
+        int union = pairs1.Count + pairs2.Count;
+
+        for (int i = 0; i < pairs1.Count; i++)
+        {
+            for (int j = 0; j < pairs2.Count; j++)
+            {
+                if (pairs1[i] == pairs2[j])
+                {
+                    intersection++;
+                    pairs2.RemoveAt(j);//Must remove the match to prevent "AAAA" from appearing to match "AA" with 100% success
+                    break;
+                }
+            }
+        }
+
+        return (2.0 * intersection * 100) / union; //returns in percentage
+        //return (2.0 * intersection) / union; //returns in score from 0 to 1
+    }
+    
+    private static List<string> WordLetterPairs(string str)
+    {
+        var AllPairs = new List<string>();
+
+        // Tokenize the string and put the tokens/words into an array
+        string[] Words = Regex.Split(str, @"\s");
+
+        // For each word
+        for (int w = 0; w < Words.Length; w++)
+        {
+            if (!string.IsNullOrEmpty(Words[w]))
+            {
+                // Find the pairs of characters
+                String[] PairsInWord = LetterPairs(Words[w]);
+
+                for (int p = 0; p < PairsInWord.Length; p++)
+                {
+                    AllPairs.Add(PairsInWord[p]);
+                }
+            }
+        }
+        return AllPairs;
+    }
+
+    // Generates an array containing every two consecutive letters in the input string
+    private static string[] LetterPairs(string str)
+    {
+        int numPairs = str.Length - 1;
+        string[] pairs = new string[numPairs];
+
+        for (int i = 0; i < numPairs; i++)
+        {
+            pairs[i] = str.Substring(i, 2);
+        }
+        return pairs;
     }
 }
