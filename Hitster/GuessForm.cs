@@ -145,23 +145,17 @@ public partial class GuessForm : Form
     //Wenn der Überorüfen Knopf gedrückt wird wird überprüft ob die Eingabe richtig ist 
     private void CheckButton_Click(object? sender, EventArgs e)
     {
-        var currentTrack = Player.LocalPlayer?.CurrentTrack; //Speichert das aktuelle Lied
+        var currentTrack = Player.LocalPlayer?.CurrentTrack;
         
-        //Überprüft ob ein Lied vorhanden ist
-        if (currentTrack == null)
-        {
-            feedbackLabel.Text = "Kein Lied vorhanden";
-            feedbackLabel.ForeColor = Color.Red;
-            return;
-        }
+        var inputTitle = RemoveSpecialCaracters(titleInput.Text);
+        var inputArtist = RemoveSpecialCaracters(artistInput.Text);
 
-        var inputTitle = titleInput.Text.Trim(); //Speichert die Eingabe des Titels und entfernt leerzeichen
-        var inputArtist = artistInput.Text.Trim(); //Speichert die Eingabe des Interpreten und entfernt leerzeichen
+        var realTitle = RemoveSpecialCaracters(currentTrack.Name);
+        var realArtist = RemoveSpecialCaracters(currentTrack.Artist);
 
-        bool titleCorrect = string.Equals(inputTitle, currentTrack.Name, StringComparison.OrdinalIgnoreCase); //Verglciht die Eingabe des Titels mit dem aktuellen Liedtitel und ignoriert Groß und kleinschreibung
-        bool artistCorrect = string.Equals(inputArtist, currentTrack.Artist, StringComparison.OrdinalIgnoreCase); //Verglciht die Eingabe des Interpretens mit dem aktuellen Interpreten und ignoriert Groß und kleinschreibung
+        bool titleCorrect = realTitle.Contains(inputTitle);
+        bool artistCorrect = realArtist.Contains(inputArtist);
 
-        //Gibt aus wenn die Eingabe richtig ist
         if (titleCorrect && artistCorrect)
         {
             feedbackLabel.Text = "Richtig! Du erhältst einen Token";
@@ -169,7 +163,24 @@ public partial class GuessForm : Form
         }
         else
         {
-            feedbackLabel.Text = "Titel oder Interpret flasch";
+            feedbackLabel.Text = "Falsch";
+            feedbackLabel.ForeColor = Color.Red;
         }
+    }
+
+    //Entfernt Sonderueichen aus den Titeln der Lieder
+    private string RemoveSpecialCaracters(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return "";
+        }
+
+        text = text.ToLower();
+        text = text.Replace(" ", "");
+        text = text.Replace("/", "");
+        text = text.Replace("-", "");
+
+        return text;
     }
 }
