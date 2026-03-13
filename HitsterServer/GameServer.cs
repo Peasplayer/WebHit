@@ -81,7 +81,7 @@ public class GameServer
             return;
         }
         
-        if (client.IsHost && Clients.Count != 0)
+        if (client.IsHost && Clients.Count != 0) 
         {
             Clients[0].IsHost = true;
             FleckLog.Info($"<{Clients[0].Id}> Became Host");
