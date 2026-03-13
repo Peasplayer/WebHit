@@ -95,11 +95,9 @@ public partial class MenueForm : Form
     {
         if (nameBox.Text.Trim() == "" || ipBox.Text.Trim() == "")
         {
-            MessageBox.Show("Bitte Name und IP eingeben!", "Fehler");
+            MessageBox.Show("Bitte Name und IP eingeben!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
-
-        startButton.Enabled = false;
 
         Task.Run(() =>
         {
@@ -107,23 +105,23 @@ public partial class MenueForm : Form
             {
                 new NetworkManager("ws://" + ipBox.Text + ":8443", nameBox.Text);
             }
-            catch
+            catch (Exception ex)
             {
-                BeginInvoke(() =>
+                BeginInvoke(new Action(() =>
                 {
-                    MessageBox.Show("Server nicht erreichbar", "Fehler");
-                    startButton.Enabled = true;
-                });
+                    MessageBox.Show($"Server nicht erreichbar!\n{ex.Message}", "Verbindungsfehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }));
                 return;
             }
 
-            BeginInvoke(() =>
+            BeginInvoke(new Action(() =>
             {
                 Lobby lobby = new Lobby();
                 lobby.Location = this.Location;
+                lobby.FormClosed += (s, args) => this.Close(); 
                 lobby.Show();
                 this.Hide();
-            });
+            }));
         });
     }
 }
