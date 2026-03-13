@@ -68,15 +68,6 @@ public class Timeline : Panel
                 {
                     card = new Card(t);
                     _cards.Add(card);
-                   //Wenn das Lied vom Lokalem Spieler ist kann er das Lied Raten
-                    if (_player == Player.LocalPlayer && _player.CurrentTrack == t)
-                    {
-                        BeginInvoke(() =>
-                        {
-                            var guessForm = new GuessForm();
-                            guessForm.ShowDialog();
-                        });
-                    }
                 }
                 else
                     card = _cards[cardIndex];
