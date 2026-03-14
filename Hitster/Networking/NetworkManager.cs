@@ -63,7 +63,7 @@ public class NetworkManager
                     }
 
                     Console.WriteLine($"Got name ({handshakePacket.Name})[{handshakePacket.Id}]{(handshakePacket.IsHost ? " [Host]" : "")} assigned");
-                    Player.LocalPlayer = new Player(handshakePacket.Id, handshakePacket.Name, handshakePacket.IsHost);
+                    Player.SetLocalPlayer(new Player(handshakePacket.Id, handshakePacket.Name, handshakePacket.IsHost));
                     break;
                 }
                 case PacketType.Track:

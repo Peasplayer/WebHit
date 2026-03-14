@@ -21,7 +21,8 @@ public partial class Lobby : ResizeForm
         {
             Cursor = Cursors.Hand,
             Text = "Start",
-            Visible = false
+            Visible = false,
+            Enabled = false
         };
         StartButton.Click += (_, _) => NetworkManager.Instance.RpcStart();
         Controls.Add(StartButton);
@@ -62,10 +63,11 @@ public partial class Lobby : ResizeForm
     private void _refreshPlayers()
     {
         StartButton.Visible = Player.LocalPlayer?.IsHost ?? false;
+        StartButton.Enabled = Player.AllPlayers.Count >= 2;
         for (int i = 0; i < 6; i++)
         {
             var card = Cards[i];
-            var player =  i + 1 <= Player.AllPlayers.Count ? Player.AllPlayers[i] : null;
+            var player = i + 1 <= Player.AllPlayers.Count ? Player.AllPlayers[i] : null;
             card.SetPlayer(player);
         }
     }
