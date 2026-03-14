@@ -41,6 +41,7 @@ public class Player
     public bool IsHost { get; private set; }
     public List<TrackData> AllTracks { get; }
     public TrackData? CurrentTrack { get; private set; }
+    public Tuple<string, string>? CurrentTrackGuess { get; private set; }
     public int Tokens { get; private set; }
     
     public Player(int id, string name, bool isHost)
@@ -104,7 +105,23 @@ public class Player
 
     public void RevealCurrentTrack()
     {
+        if (CurrentTrack == null)
+            return;
+        
+        if (CurrentTrackGuess != null && Program.CompareStrings(CurrentTrack.Name, CurrentTrackGuess.Item1) > 90
+                                      && Program.CompareStrings(CurrentTrack.Artist, CurrentTrackGuess.Item2) > 90)
+        {
+            Task.Run(() => MessageBox.Show("Du hast den Song erraten und erhälst einen Token!", "Richtig!", MessageBoxButtons.OK,
+                MessageBoxIcon.Information));
+            NetworkManager.Instance.RpcAddToken(Id, 1);
+        }
         Timeline.RevealTrack(this, CurrentTrack);
         CurrentTrack = null;
+        CurrentTrackGuess = null;
+    }
+
+    public void GuessCurrentTrack(string title, string artist)
+    {
+        CurrentTrackGuess = new Tuple<string, string>(title, artist);
     }
 }

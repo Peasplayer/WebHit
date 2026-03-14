@@ -1,11 +1,11 @@
 namespace HitsterServer.Packets;
 
-public class TokenPacket : Packet
+public class TokenPlacePacket : Packet
 {
     public int Id { get; }
     public int Index { get; }
     
-    public TokenPacket(int id, int index) : base(PacketType.Token)
+    public TokenPlacePacket(int id, int index) : base(PacketType.TokenPlace)
     {
         Id = id;
         Index = index;

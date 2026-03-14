@@ -92,7 +92,7 @@ public class Timeline : Panel
                     
                     if (!guessedWrong)
                     {
-                        NetworkManager.Instance.RpcTokenRight(Player.GetPlayer(guess.Key), track);
+                        NetworkManager.Instance.RpcTokenCorrect(Player.GetPlayer(guess.Key), track);
                         break;
                     }
                 }

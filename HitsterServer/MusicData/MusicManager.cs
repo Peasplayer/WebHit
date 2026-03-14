@@ -72,7 +72,8 @@ public class MusicManager
             if (releaseYears.Count == 0)
             {
                 response = JsonConvert.DeserializeAnonymousType(await client.GetStringAsync(
-                        $"https://api.discogs.com/database/search?query={randomTrack.Artist} - {randomTrack.Name}&per_page={ResultCount}"), 
+                        $"https://api.discogs.com/database/search?query={randomTrack.Name} - {randomTrack.Artist}"
+                        + $"&type=release&per_page={ResultCount}"), 
                     new { results = Array.Empty<DcResults>() });
                 
                 releaseYears = response.results.ToList().ConvertAll(r =>

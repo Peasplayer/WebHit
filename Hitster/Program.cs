@@ -2,6 +2,7 @@ using System.Drawing.Text;
 using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Hitster.Networking;
 
 namespace Hitster;
@@ -51,5 +52,68 @@ static class Program
             throw new MissingManifestResourceException(name + " does not exist!");
         
         return stream;
+    }
+    
+    // Quelle: https://medium.com/@tarakshah/this-article-explains-how-to-check-the-similarity-between-two-string-in-percentage-or-score-from-0-83e206bf6bf5
+    public static double CompareStrings(string str1, string str2)
+    {
+        var pairs1 = WordLetterPairs(str1.ToUpper());
+        var pairs2 = WordLetterPairs(str2.ToUpper());
+
+        int intersection = 0;
+        int union = pairs1.Count + pairs2.Count;
+
+        for (int i = 0; i < pairs1.Count; i++)
+        {
+            for (int j = 0; j < pairs2.Count; j++)
+            {
+                if (pairs1[i] == pairs2[j])
+                {
+                    intersection++;
+                    pairs2.RemoveAt(j);//Must remove the match to prevent "AAAA" from appearing to match "AA" with 100% success
+                    break;
+                }
+            }
+        }
+
+        return (2.0 * intersection * 100) / union; //returns in percentage
+        //return (2.0 * intersection) / union; //returns in score from 0 to 1
+    }
+    
+    private static List<string> WordLetterPairs(string str)
+    {
+        var AllPairs = new List<string>();
+
+        // Tokenize the string and put the tokens/words into an array
+        string[] Words = Regex.Split(str, @"\s");
+
+        // For each word
+        for (int w = 0; w < Words.Length; w++)
+        {
+            if (!string.IsNullOrEmpty(Words[w]))
+            {
+                // Find the pairs of characters
+                String[] PairsInWord = LetterPairs(Words[w]);
+
+                for (int p = 0; p < PairsInWord.Length; p++)
+                {
+                    AllPairs.Add(PairsInWord[p]);
+                }
+            }
+        }
+        return AllPairs;
+    }
+
+    // Generates an array containing every two consecutive letters in the input string
+    private static string[] LetterPairs(string str)
+    {
+        int numPairs = str.Length - 1;
+        string[] pairs = new string[numPairs];
+
+        for (int i = 0; i < numPairs; i++)
+        {
+            pairs[i] = str.Substring(i, 2);
+        }
+        return pairs;
     }
 }

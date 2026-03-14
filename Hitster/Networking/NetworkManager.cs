@@ -139,9 +139,9 @@ public class NetworkManager
                     Timeline.ToggleTokenPlacement(true);
                     break;
                 }
-                case PacketType.Token:
+                case PacketType.TokenPlace:
                 {
-                    var tokenPacket = JsonConvert.DeserializeObject<TokenPacket>(msg);
+                    var tokenPacket = JsonConvert.DeserializeObject<TokenPlacePacket>(msg);
                     if (tokenPacket == null)
                     {
                         Console.WriteLine("Received malformed packet!");
@@ -166,6 +166,18 @@ public class NetworkManager
                     }
 
                     Player.GetPlayer(trackPacket.Id).AddTrack(trackPacket.Track);
+                    break;
+                }
+                case PacketType.TokenAdd:
+                {
+                    var tokenPacket = JsonConvert.DeserializeObject<TokenAddPacket>(msg);
+                    if (tokenPacket == null)
+                    {
+                        Console.WriteLine("Received malformed packet!");
+                        return;
+                    }
+
+                    Player.GetPlayer(tokenPacket.Id).AddTokens(tokenPacket.Amount);
                     break;
                 }
                 case PacketType.Reveal:
@@ -252,11 +264,16 @@ public class NetworkManager
     {
         if (Player.CurrentPlayer?.Id == Player.LocalPlayer.Id)
             return;
-        SendPacket(new TokenPacket(Player.LocalPlayer.Id, index));
+        SendPacket(new TokenPlacePacket(Player.LocalPlayer.Id, index));
     }
 
-    public void RpcTokenRight(Player player, TrackData track)
+    public void RpcTokenCorrect(Player player, TrackData track)
     {
         SendPacket(new TokenCorrectPacket(track, player.Id));
+    }
+
+    public void RpcAddToken(int id, int amount)
+    {
+        SendPacket(new TokenAddPacket(id, amount));
     }
 }

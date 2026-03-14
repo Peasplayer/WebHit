@@ -174,12 +174,24 @@ public class GameServer
                 SendPacketEveryone(new TrackPacket(await MusicManager.GetRandomTrack(), CurrentPlayer));
                 break;
             }
-            case PacketType.Token:
+            case PacketType.TokenAdd:
+            {
+                var packet = JsonConvert.DeserializeObject<TokenAddPacket>(msg);
+                if (packet == null)
+                {
+                    FleckLog.Warn($"<{client.Id}> Malformed Packet received!");
+                    return;
+                }
+                
+                SendPacketEveryone(packet);
+                break;
+            }
+            case PacketType.TokenPlace:
             {
                 if (client.Id == CurrentPlayer)
                     return;
                 
-                var packet = JsonConvert.DeserializeObject<TokenPacket>(msg);
+                var packet = JsonConvert.DeserializeObject<TokenPlacePacket>(msg);
                 if (packet == null)
                 {
                     FleckLog.Warn($"<{client.Id}> Malformed Packet received!");

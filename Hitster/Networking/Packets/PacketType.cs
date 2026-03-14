@@ -11,7 +11,8 @@ public enum PacketType : uint
     Confirm,
     Move,
     SwitchTurn,
-    Token,
+    TokenAdd,
+    TokenPlace,
     TokenCorrect,
     Reveal,
     Win
