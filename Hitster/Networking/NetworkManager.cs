@@ -224,6 +224,11 @@ public class NetworkManager
                     Form1.PlayerWon(Player.GetPlayer(winPacket.Player));
                     break;
                 }
+                case PacketType.SkipTrack:
+                {
+                    Player.CurrentPlayer?.DiscradCurrentTrack();
+                    break;
+                }
             }
         }
         catch (Exception e)
@@ -275,5 +280,22 @@ public class NetworkManager
     public void RpcAddToken(int id, int amount)
     {
         SendPacket(new TokenAddPacket(id, amount));
+    }
+
+    public void RpcSkipTrack()
+    {
+        if (Player.CurrentPlayer?.Id != Player.LocalPlayer.Id || Player.LocalPlayer.Tokens < 1)
+        {
+            return;
+        }
+        SendPacket(new Packet(PacketType.SkipTrack));
+    }
+    public void RpcBuyTrack()
+    {
+        if (Player.LocalPlayer.Tokens < 3)
+        {
+            return;
+        }
+        SendPacket(new Packet(PacketType.BuyTrack));
     }
 }

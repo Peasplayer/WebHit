@@ -119,6 +119,17 @@ public class Player
         CurrentTrack = null;
         CurrentTrackGuess = null;
     }
+    //methode zum entfernen einer Karte
+    public void DiscradCurrentTrack()
+    {
+        if (CurrentTrack != null)
+        {
+            AllTracks.Remove(CurrentTrack);
+            CurrentTrack = null;
+            CurrentTrackGuess = null;
+            Timeline.UpdateTimeline(this); 
+        }
+    }
 
     public void GuessCurrentTrack(string title, string artist)
     {
