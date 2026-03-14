@@ -5,7 +5,8 @@ namespace Hitster;
 
 public sealed class Card : Panel
 {
-    public bool IsConfirmed { get; private set; }
+    public bool IsRevealed { get; private set; }
+    public bool IsCorrect { get; private set; }
     public TrackData Track { get; }
 
     private Label _artist;
@@ -51,7 +52,7 @@ public sealed class Card : Panel
         SizeChanged += (_, _) => ResizeLabels();
         Click += (_, _) =>
         {
-            if (!IsConfirmed && Player.CurrentPlayer == Player.LocalPlayer)
+            if (!IsRevealed && Player.CurrentPlayer == Player.LocalPlayer && !Timeline.AllowTokenPlacement)
             {
                 //Wenn das Lied vom Lokalem Spieler ist kann er das Lied Raten
                 var guess = MessageBox.Show("Frage", "Möchtest du den Track eraten?", MessageBoxButtons.YesNo,
@@ -69,7 +70,8 @@ public sealed class Card : Panel
 
     public void MarkAsConfirmed(bool wrong)
     {
-        IsConfirmed = true;
+        IsRevealed = true;
+        IsCorrect = !wrong;
         BackgroundImage = null;
         BackColor = GetHashColor();
         _artist.Visible = true;

@@ -2,8 +2,7 @@
 
 public abstract class ResizeForm : Form
 {
-    private Rectangle _container;
-    private Panel _containerDisplay;
+    private Panel _container;
     private int widthUnit;
     private int heightUnit;
     private List<ResizeControl> _resizeControls = new ();
@@ -12,22 +11,20 @@ public abstract class ResizeForm : Form
     public ResizeForm()
     {
         DoubleBuffered = true;
-        WindowState = FormWindowState.Maximized; //macht Vollbild
         
-        _containerDisplay = new Panel{BackColor = Color.Fuchsia};
-        _containerDisplay.SendToBack();
-        Controls.Add(_containerDisplay);
+        _container = new Panel{BackColor = Color.Fuchsia};
+        _container.SendToBack();
+        Controls.Add(_container);
         
         SizeChanged += (_, _) => _startRenderingForm();
         Resize += (_, _) => _startRenderingForm();
+        Invalidated += (_, _) => _startRenderingForm();
         
         _startRenderingForm();
     }
 
     private void _startRenderingForm()
     {
-        _container = new Rectangle();
-        
         var calcWidth = ClientSize.Width;
         var calcHeight = ClientSize.Width * 9 / 16;
         if (calcHeight > ClientSize.Height)
@@ -40,11 +37,7 @@ public abstract class ResizeForm : Form
         _container.Width = calcWidth;
         _container.Height = calcHeight;
         _container.Location = new Point((ClientSize.Width - _container.Width) / 2, (ClientSize.Height - _container.Height) / 2);
-        
-        _containerDisplay.Width = _container.Width;
-        _containerDisplay.Height = _container.Height;
-        _containerDisplay.Location = _container.Location;
-        _containerDisplay.SendToBack();
+        _container.SendToBack();
         
         widthUnit = _container.Width / 32;
         heightUnit = _container.Height / 18;
@@ -75,7 +68,7 @@ public abstract class ResizeForm : Form
 
     private Point GetLocation(PointF location)
     {
-        return new Point((int)(_container.X + location.X * widthUnit), (int)(_container.Y + location.Y * heightUnit));
+        return new Point((int)(_container.Location.X + location.X * widthUnit), (int)(_container.Location.Y + location.Y * heightUnit));
     }
     
     private struct ResizeControl

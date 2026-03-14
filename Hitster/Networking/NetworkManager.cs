@@ -76,7 +76,7 @@ public class NetworkManager
                     }
 
                     Console.WriteLine($"Got song ({trackPacket.Track.Name}) by ({trackPacket.Track.Artist})");
-                    Player.Players.Find(p => p.Id == trackPacket.Id)?.PlaceCurrentTrack(0, trackPacket.Track);
+                    Player.GetPlayer(trackPacket.Id).PlaceCurrentTrack(0, trackPacket.Track);
                     break;
                 }
                 case PacketType.Join:
@@ -88,7 +88,7 @@ public class NetworkManager
                         return;
                     }
 
-                    if (joinPacket.Id == Player.LocalPlayer.Id)
+                    if (joinPacket.Id == Player.LocalPlayer.Id || Player.AllPlayers.Find(p => p.Id == joinPacket.Id) != null)
                         return;
 
                     Console.WriteLine($"Player {joinPacket.Name} ({joinPacket.Id}){(joinPacket.IsHost ? " [Host]" : "")} joined");
@@ -104,7 +104,7 @@ public class NetworkManager
                         return;
                     }
 
-                    Player.RemovePlayer(Player.Players.Find(p => p.Id == leavePacket.Player) ?? throw new InvalidOperationException());
+                    Player.RemovePlayer(Player.GetPlayer(leavePacket.Player));
                     break;
                 }
                 case PacketType.Host:
@@ -116,7 +116,7 @@ public class NetworkManager
                         return;
                     }
 
-                    Player.Players.Find(p => p.Id == hostPacket.Player)?.SetHost(true);
+                    Player.GetPlayer(hostPacket.Player).SetHost(true);
                     break;
                 }
                 case PacketType.Start:
@@ -125,13 +125,53 @@ public class NetworkManager
                     {
                         var form = new Form1();
                         form.Show();
+                        form.Size = Lobby.Instance.Size;
+                        form.WindowState = Lobby.Instance.WindowState;
+                        form.Location = Lobby.Instance.Location;
+                        form.Invalidate();
                         Lobby.Instance.Hide();
                     });
                     break;
                 }
                 case PacketType.Confirm:
                 {
-                    Player.CurrentPlayer?.ConfirmTrack();
+                    Player.TokenGuesses.Clear();
+                    Timeline.ToggleTokenPlacement(true);
+                    break;
+                }
+                case PacketType.Token:
+                {
+                    var tokenPacket = JsonConvert.DeserializeObject<TokenPacket>(msg);
+                    if (tokenPacket == null)
+                    {
+                        Console.WriteLine("Received malformed packet!");
+                        return;
+                    }
+
+                    if (!Player.TokenGuesses.ContainsKey(tokenPacket.Id))
+                    {
+                        Player.TokenGuesses.Add(tokenPacket.Id, tokenPacket.Index);
+                        Player.GetPlayer(tokenPacket.Id).AddTokens(-1);
+                        Timeline.UpdateTimeline(Player.CurrentPlayer);
+                    }
+                    break;
+                }
+                case PacketType.TokenCorrect:
+                {
+                    var trackPacket = JsonConvert.DeserializeObject<TrackPacket>(msg);
+                    if (trackPacket == null)
+                    {
+                        Console.WriteLine("Received malformed packet!");
+                        return;
+                    }
+
+                    Player.GetPlayer(trackPacket.Id).AddTrack(trackPacket.Track);
+                    break;
+                }
+                case PacketType.Reveal:
+                {
+                    Timeline.ToggleTokenPlacement(false);
+                    Player.CurrentPlayer?.RevealCurrentTrack();
                     break;
                 }
                 case PacketType.SwitchTurn:
@@ -143,7 +183,9 @@ public class NetworkManager
                         return;
                     }
 
-                    Player.SetCurrentPlayer(Player.Players.Find(p => p.Id == turnPacket.Player) ?? throw new InvalidOperationException());
+                    Player.SetCurrentPlayer(Player.GetPlayer(turnPacket.Player));
+                    if (Player.CurrentPlayer != Player.LocalPlayer)
+                        Form1.SetOtherTimeline(Player.CurrentPlayer);
                     break;
                 }
                 case PacketType.Move:
@@ -167,7 +209,7 @@ public class NetworkManager
                         return;
                     }
 
-                    Form1.PlayerWon(Player.Players.Find(p => p.Id == winPacket.Player) ?? throw new InvalidOperationException());
+                    Form1.PlayerWon(Player.GetPlayer(winPacket.Player));
                     break;
                 }
             }
@@ -203,8 +245,18 @@ public class NetworkManager
 
     public void RpcPlayerWon(Player player)
     {
-        if (Player.CurrentPlayer.Id != Player.LocalPlayer.Id)
-            return;
         SendPacket(new WinPacket(player.Id));
+    }
+
+    public void RpcPlaceToken(int index)
+    {
+        if (Player.CurrentPlayer?.Id == Player.LocalPlayer.Id)
+            return;
+        SendPacket(new TokenPacket(Player.LocalPlayer.Id, index));
+    }
+
+    public void RpcTokenRight(Player player, TrackData track)
+    {
+        SendPacket(new TokenCorrectPacket(track, player.Id));
     }
 }
