@@ -21,7 +21,7 @@ static class Program
         // see https://aka.ms/applicationconfiguration.
         ApplicationConfiguration.Initialize();
         Application.SetCompatibleTextRenderingDefault(true);
-        Application.Run(new Lobby());
+        Application.Run(new MenueForm());
     }
 
     public static FontFamily MontserratBold { get; } = GetFont("Montserrat-Bold");
