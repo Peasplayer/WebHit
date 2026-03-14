@@ -7,22 +7,19 @@ namespace Hitster.Networking;
 
 public class NetworkManager
 {
-    public static NetworkManager Instance { get; private set; }
-    
-    public WebsocketClient Client { get; }
+    private static WebsocketClient? _client;
 
-    public NetworkManager(string address, string name)
+    public static void Connect(string address, string name)
     {
-        Instance = this;
-        Client = new WebsocketClient(new Uri(address));
+        _client = new WebsocketClient(new Uri(address));
         
         // Client wird konfiguriert
-        Client.IsReconnectionEnabled = false;
-        Client.ErrorReconnectTimeout = null;
-        Client.ReconnectTimeout = TimeSpan.FromSeconds(5);
+        _client.IsReconnectionEnabled = false;
+        _client.ErrorReconnectTimeout = null;
+        _client.ReconnectTimeout = TimeSpan.FromSeconds(5);
         
         // Nachrichten empfangen und an den Listener weiterleiten
-        Client.MessageReceived.Subscribe(msg =>
+        _client.MessageReceived.Subscribe(msg =>
         {
             if (msg.MessageType == WebSocketMessageType.Text && msg.Text != null)
             {
@@ -32,12 +29,12 @@ public class NetworkManager
         });
         
         // Wartet bis die Verbindung hergestellt wurde oder fehlschlägt
-        Client.StartOrFail().Wait();
+        _client.StartOrFail().Wait();
 
         SendPacket(new HandshakePacket(name));
     }
 
-    private void HandlePacket(string msg)
+    private static void HandlePacket(string msg)
     {
         try
         {
@@ -232,47 +229,47 @@ public class NetworkManager
         }
     }
 
-    private void SendPacket(Packet packet) {
-        Client.Send(JsonConvert.SerializeObject(packet));
+    private static void SendPacket(Packet packet) {
+        _client.Send(JsonConvert.SerializeObject(packet));
     }
 
-    public void RpcStart()
+    public static void RpcStart()
     {
         SendPacket(new Packet(PacketType.Start));
     }
     
-    public void RpcConfirmTrack()
+    public static void RpcConfirmTrack()
     {
         if (Player.CurrentPlayer.Id != Player.LocalPlayer.Id)
             return;
         SendPacket(new Packet(PacketType.Confirm));
     }
 
-    public void RpcMoveCurrentTrack(int index)
+    public static void RpcMoveCurrentTrack(int index)
     {
         if (Player.CurrentPlayer.Id != Player.LocalPlayer.Id)
             return;
         SendPacket(new MovePacket(index));
     }
 
-    public void RpcPlayerWon(Player player)
+    public static void RpcPlayerWon(Player player)
     {
         SendPacket(new WinPacket(player.Id));
     }
 
-    public void RpcPlaceToken(int index)
+    public static void RpcPlaceToken(int index)
     {
         if (Player.CurrentPlayer?.Id == Player.LocalPlayer.Id)
             return;
         SendPacket(new TokenPlacePacket(Player.LocalPlayer.Id, index));
     }
 
-    public void RpcTokenCorrect(Player player, TrackData track)
+    public static void RpcTokenCorrect(Player player, TrackData track)
     {
         SendPacket(new TokenCorrectPacket(track, player.Id));
     }
 
-    public void RpcAddToken(int id, int amount)
+    public static void RpcAddToken(int id, int amount)
     {
         SendPacket(new TokenAddPacket(id, amount));
     }

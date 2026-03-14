@@ -24,7 +24,7 @@ public partial class Lobby : ResizeForm
             Visible = false,
             Enabled = false
         };
-        StartButton.Click += (_, _) => NetworkManager.Instance.RpcStart();
+        StartButton.Click += (_, _) => NetworkManager.RpcStart();
         Controls.Add(StartButton);
         RegisterResizeControl(StartButton, new SizeF(3, 1), new PointF(14.5f, 14), () =>
         {

@@ -119,7 +119,7 @@ public class Player
         {
             Task.Run(() => MessageBox.Show("Du hast den Song erraten und erhälst einen Token!", "Richtig!", MessageBoxButtons.OK,
                 MessageBoxIcon.Information));
-            NetworkManager.Instance.RpcAddToken(Id, 1);
+            NetworkManager.RpcAddToken(Id, 1);
         }
         Timeline.RevealTrack(this, CurrentTrack);
         CurrentTrack = null;

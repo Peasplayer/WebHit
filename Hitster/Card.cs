@@ -63,7 +63,7 @@ public sealed class Card : Panel
                     var guessForm = new GuessForm();
                     guessForm.ShowDialog();
                 }
-                NetworkManager.Instance.RpcConfirmTrack();
+                NetworkManager.RpcConfirmTrack();
             }
         };
     }
