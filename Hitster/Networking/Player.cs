@@ -3,7 +3,7 @@ namespace Hitster.Networking;
 public class Player
 {
     public static List<Player> AllPlayers = new List<Player>();
-    public static Player LocalPlayer;
+    public static Player? LocalPlayer { get; private set; }
     public static Player? CurrentPlayer { get; private set; }
     public static Dictionary<int, int> TokenGuesses { get; } = new Dictionary<int, int>();
 
@@ -12,6 +12,12 @@ public class Player
     public static void SetCurrentPlayer(Player player)
     {
         CurrentPlayer = player;
+        PlayerDataChanged?.Invoke();
+    }
+
+    public static void SetLocalPlayer(Player player)
+    {
+        LocalPlayer = player;
         PlayerDataChanged?.Invoke();
     }
 
@@ -113,7 +119,7 @@ public class Player
         {
             Task.Run(() => MessageBox.Show("Du hast den Song erraten und erhälst einen Token!", "Richtig!", MessageBoxButtons.OK,
                 MessageBoxIcon.Information));
-            NetworkManager.Instance.RpcAddToken(Id, 1);
+            NetworkManager.RpcAddToken(Id, 1);
         }
         Timeline.RevealTrack(this, CurrentTrack);
         CurrentTrack = null;

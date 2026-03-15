@@ -92,7 +92,7 @@ public class Timeline : Panel
                     
                     if (!guessedWrong)
                     {
-                        NetworkManager.Instance.RpcTokenCorrect(Player.GetPlayer(guess.Key), track);
+                        NetworkManager.RpcTokenCorrect(Player.GetPlayer(guess.Key), track);
                         break;
                     }
                 }
@@ -211,7 +211,7 @@ public class Timeline : Panel
         var count = _cards.FindAll(c => c.IsRevealed && c.IsCorrect).Count;
         if (count == 3 && Player.LocalPlayer == _player)
         {
-            NetworkManager.Instance.RpcPlayerWon(_player);
+            NetworkManager.RpcPlayerWon(_player);
         }
     }
 
@@ -227,9 +227,9 @@ public class Timeline : Panel
         slot.Click += (_, _) =>
         {
             if (AllowTokenPlacement)
-                NetworkManager.Instance.RpcPlaceToken(index);
+                NetworkManager.RpcPlaceToken(index);
             else
-                NetworkManager.Instance.RpcMoveCurrentTrack(index);
+                NetworkManager.RpcMoveCurrentTrack(index);
         };
         Controls.Add(slot);
         _activeSlots.Add(slot);

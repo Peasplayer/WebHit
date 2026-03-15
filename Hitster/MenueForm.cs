@@ -103,7 +103,7 @@ public partial class MenueForm : Form
         {
             try
             {
-                new NetworkManager("ws://" + ipBox.Text + ":9443", nameBox.Text);
+                NetworkManager.Connect("ws://" + ipBox.Text + ":9443", nameBox.Text);
             }
             catch (Exception ex)
             {
