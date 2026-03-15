@@ -15,5 +15,7 @@ public enum PacketType : uint
     TokenPlace,
     TokenCorrect,
     Reveal,
-    Win
+    Win,
+    SkipTrack,
+    BuyTrack
 }

@@ -11,13 +11,15 @@ public partial class Form1 : ResizeForm
     private Timeline OtherTimeline { get; }
     private FlowLayoutPanel PlayerArea { get; }
     private WasapiOut? _musicPlayer;
-    
+    private Button skipButton;
+    private Button BuyTrackButton;
+
     public Form1()
     {
         _instance = this;
         FormClosing += (_, _) => Lobby.Instance?.Close();
         InitializeComponent();
-        
+
         OwnTimeline = new Timeline();
         OwnTimeline.SetPlayer(Player.LocalPlayer);
         RegisterResizeControl(OwnTimeline, new SizeF(30, 3.5f), new PointF(1, 1), OwnTimeline.AfterResize);
@@ -37,8 +39,49 @@ public partial class Form1 : ResizeForm
         };
         RegisterResizeControl(PlayerArea, new SizeF(32, 4f), new PointF(0, 14), RenderPlayers);
         Controls.Add(PlayerArea);
-        
+
         Player.PlayerDataChanged += () => Invoke(RenderPlayers);
+
+        //Button zum überspringen eines Liedes
+        skipButton = new Button()
+        {
+            Text = "Lied überspringen (1 Token)",
+            Visible = false,
+            BackColor = Color.Orange,
+            FlatStyle = FlatStyle.Flat
+        };
+        skipButton.Click += (_, _) =>
+        {
+            if (Player.LocalPlayer.Tokens >= 1)
+                NetworkManager.Instance.RpcSkipTrack();
+            else
+                MessageBox.Show("Du hast nicht genug Tokens!", "Achtung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        };
+        RegisterResizeControl(skipButton, new SizeF(6f, 1.5f), new PointF(1f, 6.5f), () => 
+        {
+            skipButton.Font = new Font(Program.MontserratSemiBold, skipButton.Height * 0.3f, FontStyle.Bold, GraphicsUnit.Pixel);
+        });
+        Controls.Add(skipButton);
+        //Button zum Kaufen eines Liedes
+        BuyTrackButton = new Button()
+        {
+            Text = "Lied kaufen (3 Tokens)",
+            Visible = true,
+            BackColor = Color.LightGreen,
+            FlatStyle = FlatStyle.Flat
+        };
+        BuyTrackButton.Click += (_, _) =>
+        {
+            if (Player.LocalPlayer.Tokens >= 3)
+                NetworkManager.Instance.RpcBuyTrack();
+            else
+                MessageBox.Show("Du hast nicht genug Tokens! Du brauchst 3.", "Achtung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        };
+        RegisterResizeControl(BuyTrackButton, new SizeF(6f, 1.5f), new PointF(1f, 8.2f), () => 
+        {
+            BuyTrackButton.Font = new Font(Program.MontserratSemiBold, BuyTrackButton.Height * 0.3f, FontStyle.Bold, GraphicsUnit.Pixel);
+        });
+        Controls.Add(BuyTrackButton);
     }
 
     public void _PlayTrack(TrackData track)
@@ -112,6 +155,18 @@ public partial class Form1 : ResizeForm
                     OtherTimeline.SetPlayer(player);
             };
             playerCard.Controls.Add(tokenLabel);
+        }
+
+        if (skipButton != null)
+        {
+            if(Player.CurrentPlayer?.Id == Player.LocalPlayer.Id)
+            {
+                skipButton.Visible = true;
+            }
+            else
+            {
+                skipButton.Visible = false;
+            }
         }
     }
 

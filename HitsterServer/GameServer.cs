@@ -243,6 +243,28 @@ public class GameServer
                     c.Connection.Close();
                 break;
             }
+            case PacketType.SkipTrack:
+            {
+                if (client.Id != CurrentPlayer)
+                {
+                    return;
+                }
+                SendPacketEveryone(new Packet(PacketType.SkipTrack));
+                SendPacketEveryone(new TokenAddPacket(client.Id, -1));
+                var newTrack = await MusicManager.GetRandomTrack();
+                SendPacketEveryone(new TrackPacket(newTrack, client.Id));
+                break;
+            }
+            case PacketType.BuyTrack:
+            {
+                //Drei Tokesn abziehn
+                SendPacketEveryone(new TokenAddPacket(client.Id, -3));
+                //Neue Karte dem Spieler geben
+                var newTrack = await MusicManager.GetRandomTrack();
+                //Damit die Karte direkt umgedrehht auf die Timeline gelegt wird
+                SendPacketEveryone(new TokenCorrectPacket(newTrack, client.Id)); 
+                break;
+            }
         }
     }
 
