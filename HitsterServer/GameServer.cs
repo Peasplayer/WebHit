@@ -46,9 +46,15 @@ public class GameServer
     }
 
     private void OnConnect(IWebSocketConnection connection) {
-        if (GameIsStarted || Clients.Count >= 6)
+        if (GameIsStarted)
         {
-            connection.Close();
+            SendPacketEveryone(new DisconnectPacket("Das Spiel hat bereits begonnen!"));
+            return;
+        }
+
+        if (Clients.Count >= 6)
+        {
+            SendPacketEveryone(new DisconnectPacket("Das Spiel ist bereits voll!"));
             return;
         }
 
@@ -70,13 +76,10 @@ public class GameServer
         Clients.Remove(client);
         SendPacketEveryone(new LeavePacket(client.Id));
 
-        if (GameIsStarted && Clients.Count <= 1)
+        if (GameIsStarted)
         {
             GameIsStarted = false;
-            foreach (var c in Clients)
-            {
-                c.Connection.Close();
-            }
+            SendPacketEveryone(new DisconnectPacket("Ein Spieler hat die Runde beendet!"));
 
             return;
         }

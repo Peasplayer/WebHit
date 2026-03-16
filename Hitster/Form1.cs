@@ -227,4 +227,9 @@ public partial class Form1 : ResizeForm
             _instance._timerLabel.Text = "";
         });
     }
+
+    public static void CloseForm()
+    {
+        _instance?.Close();
+    }
 }

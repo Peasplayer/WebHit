@@ -3,6 +3,7 @@ namespace HitsterServer.Packets;
 public enum PacketType : uint
 {
     Handshake,
+    Disconnect,
     Join,
     Leave,
     Host,

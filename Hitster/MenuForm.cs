@@ -4,6 +4,7 @@ namespace Hitster;
 
 public partial class MenuForm : Form
 {
+    private static MenuForm? _instance;
     private TextBox nameBox;
     private TextBox ipBox;
     private Button startButton;
@@ -11,6 +12,8 @@ public partial class MenuForm : Form
 
     public MenuForm()
     {
+        _instance = this;
+
         InitializeComponent();
         //Fenstergröße Einstellen
         Width = Screen.PrimaryScreen.Bounds.Width / 3;
@@ -122,10 +125,14 @@ public partial class MenuForm : Form
             {
                 var lobby = new Lobby();
                 lobby.Location = Location;
-                lobby.FormClosed += (_, _) => Show(); 
                 lobby.Show();
                 Hide();
             });
         });
+    }
+
+    public static void ShowForm()
+    {
+        _instance?.Show();
     }
 }

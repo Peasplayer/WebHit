@@ -4,7 +4,28 @@ namespace Hitster;
 
 public partial class Lobby : ResizeForm
 {
-    public static Lobby? Instance { get; private set; }
+    private static Lobby? _instance { get; set; }
+    private static bool _gameStarting;
+
+    public static void CloseForm(bool gameStarting = false)
+    {
+        _gameStarting = gameStarting;
+        _instance?.Close();
+    }
+
+    public static void OpenGameForm()
+    {
+        _instance?.BeginInvoke(() =>
+        {
+            var form = new Form1();
+            form.Show();
+            form.Size = _instance.Size;
+            form.WindowState = _instance.WindowState;
+            form.Location = _instance.Location;
+            form.Invalidate();
+            CloseForm(true);
+        });
+    }
     
     private Button StartButton { get; }
     private Button SettingsButton { get; }
@@ -12,8 +33,16 @@ public partial class Lobby : ResizeForm
     
     public Lobby()
     {
-        Instance = this;
-        FormClosing += (_, _) => Instance = null;
+        _instance = this;
+        FormClosing += (_, _) =>
+        {
+            if (!_gameStarting)
+            {
+                MenuForm.ShowForm();
+                NetworkManager.Disconnect();
+            }
+        };
+        FormClosed += (_, _) => _instance = null;
         WindowState = FormWindowState.Maximized; //macht Vollbild
         InitializeComponent();
         
@@ -57,7 +86,7 @@ public partial class Lobby : ResizeForm
         }
         _refreshPlayers();
         
-        Player.PlayerDataChanged += () => Invoke(Instance._refreshPlayers);
+        Player.PlayerDataChanged += () => Invoke(_instance._refreshPlayers);
     }
 
     private void _refreshPlayers()

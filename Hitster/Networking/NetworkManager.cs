@@ -8,15 +8,25 @@ namespace Hitster.Networking;
 public class NetworkManager
 {
     private static WebsocketClient? _client;
+    private static bool _normalDisconnect;
 
     public static void Connect(string address, string name)
     {
         _client = new WebsocketClient(new Uri(address));
+        _normalDisconnect = false;
         
         // Client wird konfiguriert
         _client.IsReconnectionEnabled = false;
         _client.ErrorReconnectTimeout = null;
         _client.ReconnectTimeout = TimeSpan.FromSeconds(5);
+        _client.DisconnectionHappened.Subscribe(info =>
+        {
+            Form1.CloseForm();
+            Lobby.CloseForm();
+            MenuForm.ShowForm();
+            if (!_normalDisconnect)
+                MessageBox.Show("Die Verbindung mit dem Server wurde getrennt!");
+        });
         
         // Nachrichten empfangen und an den Listener weiterleiten
         _client.MessageReceived.Subscribe(msg =>
@@ -32,6 +42,11 @@ public class NetworkManager
         _client.StartOrFail().Wait();
 
         SendPacket(new HandshakePacket(name));
+    }
+
+    public static void Disconnect()
+    {
+        _client?.Dispose();
     }
 
     private static void HandlePacket(string msg)
@@ -61,6 +76,21 @@ public class NetworkManager
 
                     Console.WriteLine($"Got name ({handshakePacket.Name})[{handshakePacket.Id}]{(handshakePacket.IsHost ? " [Host]" : "")} assigned");
                     Player.SetLocalPlayer(new Player(handshakePacket.Id, handshakePacket.Name, handshakePacket.IsHost));
+                    break;
+                }
+                case PacketType.Disconnect:
+                {
+                    var disconnectPacket = JsonConvert.DeserializeObject<DisconnectPacket>(msg);
+                    if (disconnectPacket == null)
+                    {
+                        Console.WriteLine("Received malformed packet!");
+                        return;
+                    }
+                    
+                    MessageBox.Show(disconnectPacket.Message, "Achtung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    _normalDisconnect = true;
+                    _client?.Dispose();
+                    
                     break;
                 }
                 case PacketType.Track:
@@ -127,17 +157,8 @@ public class NetworkManager
                     }
 
                     Settings.CurrentSettings = startPacket.Settings;
-                    
-                    Lobby.Instance?.BeginInvoke(() =>
-                    {
-                        var form = new Form1();
-                        form.Show();
-                        form.Size = Lobby.Instance.Size;
-                        form.WindowState = Lobby.Instance.WindowState;
-                        form.Location = Lobby.Instance.Location;
-                        form.Invalidate();
-                        Lobby.Instance.Hide();
-                    });
+                    //Spielform wird aufgerufen
+                    Lobby.OpenGameForm();
                     break;
                 }
                 case PacketType.Confirm:
