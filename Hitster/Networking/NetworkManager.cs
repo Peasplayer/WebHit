@@ -142,6 +142,9 @@ public class NetworkManager
                 }
                 case PacketType.Confirm:
                 {
+                    //Ein Spieler hat sein Lied bestätigt
+                    Form1.StopTimer();
+                    Form1.StartTimer("Token Platzieren", Settings.CurrentSettings.TokenPlaceTime);
                     Player.TokenGuesses.Clear();
                     Timeline.ToggleTokenPlacement(true);
                     break;
@@ -189,7 +192,9 @@ public class NetworkManager
                 }
                 case PacketType.Reveal:
                 {
-                    Timeline.ToggleTokenPlacement(false);
+                    //Aufdecken des aktuellen Songs
+                    Form1.StopTimer();
+                    Timeline.ToggleTokenPlacement(false); //Tokens können nicht mehr gesetzt werden
                     Player.CurrentPlayer?.RevealCurrentTrack();
                     break;
                 }

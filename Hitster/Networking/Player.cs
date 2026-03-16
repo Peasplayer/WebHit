@@ -92,12 +92,13 @@ public class Player
                     var timeout = 0;
                     while (_isGuessing && timeout <= Settings.CurrentSettings.GuessTime)
                     {
-                        timeout++;
                         Task.Delay(1000).Wait();
+                        timeout++;
                     }
                     if (_isGuessing)
                         ConfirmTrack();
                 });
+                Form1.StartTimer("Raten", Settings.CurrentSettings.GuessTime);
             }
             AllTracks.Add(track);
         }
@@ -125,9 +126,12 @@ public class Player
 
     public void ConfirmTrack()
     {
+        if (LocalPlayer != this)
+            return;
+
         _isGuessing = false;
         NetworkManager.RpcConfirmTrack();
-}
+    }
 
     public void RevealCurrentTrack()
     {

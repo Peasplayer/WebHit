@@ -13,6 +13,12 @@ public partial class Form1 : ResizeForm
     private WasapiOut? _musicPlayer;
     private Button skipButton;
     private Button BuyTrackButton;
+    
+    private Label _timerLabel;
+    private string _text;
+    private int _timer;
+    private int _maxTimer;
+    private bool _timerIsRunning;
 
     public Form1()
     {
@@ -27,9 +33,51 @@ public partial class Form1 : ResizeForm
 
         OtherTimeline = new Timeline();
         OtherTimeline.SetPlayer(Player.AllPlayers.Find(p => p.Id != Player.LocalPlayer.Id));
-        RegisterResizeControl(OtherTimeline, new SizeF(30, 4f), new PointF(1, 10), OtherTimeline.AfterResize);
+        RegisterResizeControl(OtherTimeline, new SizeF(30, 4f), new PointF(1, 5.5f), OtherTimeline.AfterResize);
         Controls.Add(OtherTimeline);
 
+        _timerLabel = new Label {
+            TextAlign = ContentAlignment.MiddleCenter,
+            BackColor = Color.Maroon,
+            ForeColor = Color.White
+        };
+        RegisterResizeControl(_timerLabel, new SizeF(6, 1.5f), new PointF(25, 12), () => {
+            _timerLabel.Font = new Font(Program.MontserratSemiBold, (int)(_timerLabel.Size.Height * 0.4f), GraphicsUnit.Pixel);
+        });
+        Controls.Add(_timerLabel);
+
+        //Button zum Kaufen eines Liedes
+        BuyTrackButton = new Button()
+        {
+            Text = $"Lied kaufen [{Settings.CurrentSettings.SongPrice}T]",
+            Visible = true,
+            Enabled = false,
+            BackColor = Color.LightGreen,
+            FlatStyle = FlatStyle.Flat
+        };
+        BuyTrackButton.Click += (_, _) => NetworkManager.RpcBuyTrack();
+        RegisterResizeControl(BuyTrackButton, new SizeF(6f, 1.5f), new PointF(1f, 12f), () => 
+        {
+            BuyTrackButton.Font = new Font(Program.MontserratSemiBold, BuyTrackButton.Height * 0.3f, FontStyle.Bold, GraphicsUnit.Pixel);
+        });
+        Controls.Add(BuyTrackButton);
+
+        //Button zum überspringen eines Liedes
+        skipButton = new Button()
+        {
+            Text = "Lied überspringen [1T]",
+            Visible = false,
+            Enabled = false,
+            BackColor = Color.Orange,
+            FlatStyle = FlatStyle.Flat
+        };
+        skipButton.Click += (_, _) => NetworkManager.RpcSkipTrack();
+        RegisterResizeControl(skipButton, new SizeF(6f, 1.5f), new PointF(7.2f, 12f), () => 
+        {
+            skipButton.Font = new Font(Program.MontserratSemiBold, skipButton.Height * 0.3f, FontStyle.Bold, GraphicsUnit.Pixel);
+        });
+        Controls.Add(skipButton);
+        
         PlayerArea = new FlowLayoutPanel()
         {
             BackColor = Color.FromArgb(40, 40, 40),
@@ -41,47 +89,6 @@ public partial class Form1 : ResizeForm
         Controls.Add(PlayerArea);
 
         Player.PlayerDataChanged += () => Invoke(RenderPlayers);
-
-        //Button zum überspringen eines Liedes
-        skipButton = new Button()
-        {
-            Text = "Lied überspringen (1)",
-            Visible = false,
-            BackColor = Color.Orange,
-            FlatStyle = FlatStyle.Flat
-        };
-        skipButton.Click += (_, _) =>
-        {
-            if (Player.LocalPlayer.Tokens >= 1)
-                NetworkManager.RpcSkipTrack();
-            else
-                MessageBox.Show("Du hast nicht genug Tokens!", "Achtung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        };
-        RegisterResizeControl(skipButton, new SizeF(6f, 1.5f), new PointF(1f, 6.5f), () => 
-        {
-            skipButton.Font = new Font(Program.MontserratSemiBold, skipButton.Height * 0.3f, FontStyle.Bold, GraphicsUnit.Pixel);
-        });
-        Controls.Add(skipButton);
-        //Button zum Kaufen eines Liedes
-        BuyTrackButton = new Button()
-        {
-            Text = $"Lied kaufen ({Settings.CurrentSettings.SongPrice})",
-            Visible = true,
-            BackColor = Color.LightGreen,
-            FlatStyle = FlatStyle.Flat
-        };
-        BuyTrackButton.Click += (_, _) =>
-        {
-            if (Player.LocalPlayer.Tokens >= Settings.CurrentSettings.SongPrice)
-                NetworkManager.RpcBuyTrack();
-            else
-                MessageBox.Show($"Du hast nicht genug Tokens!\nDu brauchst {Settings.CurrentSettings.SongPrice}.", "Achtung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        };
-        RegisterResizeControl(BuyTrackButton, new SizeF(6f, 1.5f), new PointF(1f, 8.2f), () => 
-        {
-            BuyTrackButton.Font = new Font(Program.MontserratSemiBold, BuyTrackButton.Height * 0.3f, FontStyle.Bold, GraphicsUnit.Pixel);
-        });
-        Controls.Add(BuyTrackButton);
     }
 
     public void _PlayTrack(TrackData track)
@@ -109,70 +116,69 @@ public partial class Form1 : ResizeForm
         }
         PlayerArea.Controls.Clear();
 
+        BuyTrackButton.Enabled = Player.LocalPlayer?.Tokens >= 3;
+        skipButton.Enabled = Player.LocalPlayer?.Tokens >= 1;
+        skipButton.Visible = Player.CurrentPlayer?.Id == Player.LocalPlayer?.Id;
+
         foreach (var player in Player.AllPlayers)
         {
             var pad = new Padding((int) (PlayerArea.Width / 6f * 0.05f), (int) (PlayerArea.Height * 0.05f), 
                 (int) (PlayerArea.Width / 6f * 0.05f), (int) (PlayerArea.Height * 0.05f));
+
+            void Click(object? s, EventArgs a) {
+                
+                if (player != Player.LocalPlayer)
+                    OtherTimeline.SetPlayer(player);
+            };
+
             var playerCard = new Panel
             {
                 Size = new Size(PlayerArea.Width / 6 - pad.Vertical, PlayerArea.Height - pad.Horizontal),
                 BackColor = player.Id == Player.CurrentPlayer?.Id ? Color.Orange : Color.Gray,
                 Margin = pad
             };
-            playerCard.Click += (_, _) =>
-            {
-                if (player != Player.LocalPlayer)
-                    OtherTimeline.SetPlayer(player);
-            };
+            playerCard.Click += Click;
             PlayerArea.Controls.Add(playerCard);
 
             var nameLabel = new Label
             {
                 Text = player.Name,
                 TextAlign = ContentAlignment.MiddleCenter,
-                ForeColor = Player.LocalPlayer == player ? Color.BurlyWood : Color.White,
-                BackColor = Color.Black,
+                ForeColor = Player.LocalPlayer == player ? Color.Black : Color.White,
+                BackColor = Player.LocalPlayer == player ? Color.BurlyWood : Color.Black,
                 Size = new Size(playerCard.Width, (int)(playerCard.Height * 0.3f)),
                 Font = new Font(Program.MontserratSemiBold, playerCard.Height * 0.1f, FontStyle.Bold, GraphicsUnit.Pixel)
             };
-            nameLabel.Click += (_, _) =>
-            {
-                if (player != Player.LocalPlayer)
-                    OtherTimeline.SetPlayer(player);
-            };
+            nameLabel.Click += Click;
             playerCard.Controls.Add(nameLabel);
             
             var tokenLabel = new Label
             {
                 Text = "Tokens: " + player.Tokens,
-                Size = new Size(playerCard.Width, (int)(playerCard.Height * 0.2f)),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Size = new Size(playerCard.Width, (int)(playerCard.Height * 0.3f)),
                 Location = new Point(0, nameLabel.Height),
                 Font = new Font(Program.MontserratSemiBold, playerCard.Height * 0.1f, FontStyle.Bold, GraphicsUnit.Pixel)
             };
-            tokenLabel.Click += (_, _) =>
-            {
-                if (player != Player.LocalPlayer)
-                    OtherTimeline.SetPlayer(player);
-            };
+            tokenLabel.Click += Click;
             playerCard.Controls.Add(tokenLabel);
-        }
 
-        if (skipButton != null)
-        {
-            if(Player.CurrentPlayer?.Id == Player.LocalPlayer.Id)
+            var trackLabel = new Label
             {
-                skipButton.Visible = true;
-            }
-            else
-            {
-                skipButton.Visible = false;
-            }
+                Text = "Songs: " + player.AllTracks.Count(t => player.CurrentTrack != t),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Size = new Size(playerCard.Width, (int)(playerCard.Height * 0.3f)),
+                Location = new Point(0, nameLabel.Height * 2),
+                Font = new Font(Program.MontserratSemiBold, playerCard.Height * 0.1f, FontStyle.Bold, GraphicsUnit.Pixel)
+            };
+            trackLabel.Click += Click;
+            playerCard.Controls.Add(trackLabel);
         }
     }
 
     private void _PlayerWon(Player player)
     {
-        MessageBox.Show($"{(Player.LocalPlayer == player ? "Du hast " : player.Name + " hat")} gewonnen!", "Hitster Won", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        MessageBox.Show($"{(Player.LocalPlayer == player ? "Du hast" : player.Name + " hat")} gewonnen!", "Hitster Won", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     public static void PlayTrack(TrackData track)
@@ -188,5 +194,37 @@ public partial class Form1 : ResizeForm
     public static void SetOtherTimeline(Player player)
     {
         _instance?.Invoke(() => _instance.OtherTimeline.SetPlayer(player));
+    }
+
+    public static void StartTimer(string text, int time)
+    {
+        _instance?.Invoke(() =>
+        {
+            _instance._timer = 0;
+            _instance._maxTimer = time;
+            _instance._text = text;
+            _instance._timerIsRunning = true;
+
+            Task.Run(() => {
+                Task.Delay(1000).Wait();
+                while(_instance._timerIsRunning && _instance._text == text && _instance._timer <= _instance._maxTimer)
+                {
+                    _instance._timer++;
+                    var remainingTime = _instance._maxTimer - _instance._timer;
+                    _instance._timerLabel.Text = _instance._text + "\n" + (remainingTime / 60).ToString("00") + ":" +
+                                                 (remainingTime % 60).ToString("00");
+                    Task.Delay(1000).Wait();
+                }
+            });
+        });
+    }
+
+    public static void StopTimer()
+    {
+        _instance?.Invoke(() =>
+        {
+            _instance._timerIsRunning = false;
+            _instance._timerLabel.Text = "";
+        });
     }
 }

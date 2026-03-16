@@ -54,19 +54,20 @@ public sealed class Card : Panel
         {
             if (!IsRevealed && Player.CurrentPlayer == Player.LocalPlayer && !Timeline.AllowTokenPlacement)
             {
-                Task.Run(() => {
-                    //Wenn das Lied vom Lokalem Spieler ist kann er das Lied Raten
-                    var guess = MessageBox.Show("Frage", "Möchtest du den Track erraten?", MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Question);
+                // Wenn das Lied vom Lokalem Spieler ist kann er das Lied Raten
+                var guess = MessageBox.Show("Möchtest du den Track erraten?", "Frage", MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
 
+                if (!IsRevealed && Player.CurrentPlayer == Player.LocalPlayer && !Timeline.AllowTokenPlacement)
+                {
                     if (guess == DialogResult.Yes)
                     {
                         var guessForm = new GuessForm();
                         guessForm.ShowDialog();
                     }
 
-                    Player.LocalPlayer.ConfirmTrack();
-                });
+                    Player.LocalPlayer?.ConfirmTrack();
+                }
             }
         };
     }
