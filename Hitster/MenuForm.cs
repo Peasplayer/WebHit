@@ -47,6 +47,11 @@ public partial class MenuForm : Form
             Location = new Point(900 * ClientSize.Width / 1920, 200 * ClientSize.Height / 1080),
             Font = new Font(Program.MontserratBold, 40F * ClientSize.Height / 1080, FontStyle.Bold, GraphicsUnit.Pixel)
         };
+        nameBox.KeyDown += (_, e) =>
+        {
+            if (e.KeyData == Keys.Enter)
+                StartButton_Click(null, e);
+        };
         Controls.Add(nameBox);
         
         // Label für IP
@@ -100,7 +105,7 @@ public partial class MenuForm : Form
         Controls.Add(rulesButton);
     }
 
-    private void StartButton_Click(object sender, EventArgs e)
+    private void StartButton_Click(object? sender, EventArgs e)
     {
         if (nameBox.Text.Trim() == "" || ipBox.Text.Trim() == "")
         {
