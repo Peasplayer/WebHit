@@ -53,7 +53,7 @@ public partial class Form1 : ResizeForm
         skipButton.Click += (_, _) =>
         {
             if (Player.LocalPlayer.Tokens >= 1)
-                NetworkManager.Instance.RpcSkipTrack();
+                NetworkManager.RpcSkipTrack();
             else
                 MessageBox.Show("Du hast nicht genug Tokens!", "Achtung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         };
@@ -73,7 +73,7 @@ public partial class Form1 : ResizeForm
         BuyTrackButton.Click += (_, _) =>
         {
             if (Player.LocalPlayer.Tokens >= 3)
-                NetworkManager.Instance.RpcBuyTrack();
+                NetworkManager.RpcBuyTrack();
             else
                 MessageBox.Show("Du hast nicht genug Tokens! Du brauchst 3.", "Achtung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         };

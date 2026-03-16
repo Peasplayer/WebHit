@@ -279,20 +279,17 @@ public class NetworkManager
         SendPacket(new TokenAddPacket(id, amount));
     }
 
-    public void RpcSkipTrack()
+    public static void RpcSkipTrack()
     {
-        if (Player.CurrentPlayer?.Id != Player.LocalPlayer.Id || Player.LocalPlayer.Tokens < 1)
-        {
+        if (Player.CurrentPlayer?.Id != Player.LocalPlayer?.Id || Player.LocalPlayer?.Tokens < 1)
             return;
-        }
         SendPacket(new Packet(PacketType.SkipTrack));
     }
-    public void RpcBuyTrack()
+    
+    public static void RpcBuyTrack()
     {
-        if (Player.LocalPlayer.Tokens < 3)
-        {
+        if (Player.LocalPlayer?.Tokens < 3)
             return;
-        }
         SendPacket(new Packet(PacketType.BuyTrack));
     }
 }

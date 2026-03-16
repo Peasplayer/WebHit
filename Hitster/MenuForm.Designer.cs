@@ -2,7 +2,7 @@
 
 namespace Hitster;
 
-partial class MenueForm
+partial class MenuForm
 {
     /// <summary>
     /// Required designer variable.
