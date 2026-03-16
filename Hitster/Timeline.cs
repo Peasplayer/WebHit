@@ -37,11 +37,18 @@ public class Timeline : Panel
     private List<Card> _cards = new();
     private readonly List<Panel> _activeSlots = new();
     private Player? _player;
+    private Label _nameLabel;
 
     public Timeline()
     {
         _timelines.Add(this);
         BackColor = Color.Green;
+        _nameLabel = new Label
+        {
+            TextAlign = ContentAlignment.MiddleCenter,
+            BackColor = Color.Red,
+            Location = new Point(0, 0)
+        };
         Render();
     }
 
@@ -177,8 +184,13 @@ public class Timeline : Panel
         {
             return;
         }
+        
+        _nameLabel.Text = (_player == Player.LocalPlayer ? "Deine" : _player.Name + "s") + " Timeline";
+        _nameLabel.Size = new Size(Size.Width, Size.Height / 8);
+        _nameLabel.Font = new Font(Program.MontserratSemiBold, (int)(_nameLabel.Size.Height * 0.85), GraphicsUnit.Pixel);
+        Controls.Add(_nameLabel);
 
-        var cardWidth = Height / 7 * 6;
+        var cardWidth = Height / 8 * 6;
         var totalWidth = _cards.Count * cardWidth;
         var startX = (Width - totalWidth) / 2;
 
@@ -209,7 +221,7 @@ public class Timeline : Panel
     private void CheckForWin()
     {
         var count = _cards.FindAll(c => c.IsRevealed && c.IsCorrect).Count;
-        if (count == 3 && Player.LocalPlayer == _player)
+        if (count == Settings.CurrentSettings.RequiredCards && Player.LocalPlayer == _player)
         {
             NetworkManager.RpcPlayerWon(_player);
         }
@@ -219,11 +231,11 @@ public class Timeline : Panel
     {
         var slot = new Panel
         {
-            Height = Height / 7,
+            Height = Height / 8,
             Width = (int)(Width / 50f),
             BackColor = Color.AliceBlue,
         };
-        slot.Location = new Point(middle - slot.Width / 2, 0);
+        slot.Location = new Point(middle - slot.Width / 2, Height / 8);
         slot.Click += (_, _) =>
         {
             if (AllowTokenPlacement)

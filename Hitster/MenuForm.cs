@@ -7,7 +7,7 @@ public partial class MenuForm : Form
     private TextBox nameBox;
     private TextBox ipBox;
     private Button startButton;
-    private Button settingsButton;
+    private Button rulesButton;
 
     public MenuForm()
     {
@@ -71,29 +71,30 @@ public partial class MenuForm : Form
         startButton = new Button
         {
             Size = new Size(500 * ClientSize.Width / 1920, 120 * ClientSize.Height / 1080),
-            Location = new Point((ClientSize.Width - startButton.Width) / 2, 750 * ClientSize.Height / 1080),
             Text = "Spiel beitreten",
             Font = new Font(Program.MontserratBold, 40F * ClientSize.Height / 1080, FontStyle.Bold, GraphicsUnit.Pixel),
             BackColor = Color.Orange,
             FlatStyle = FlatStyle.Flat,
             Cursor = Cursors.Hand
         };
+        startButton.Location = new Point((ClientSize.Width - startButton.Width) / 2, 750 * ClientSize.Height / 1080);
         startButton.Click += StartButton_Click;
         Controls.Add(startButton);
 
         //Knopf um die Settings zu öffnen
-        settingsButton = new Button
+        rulesButton = new Button
         {
             Size = new Size(200 * ClientSize.Width / 1920, 80 * ClientSize.Height / 1080),
-            Location = new Point(ClientSize.Width - settingsButton.Width - 20, ClientSize.Height - settingsButton.Height - 20),
             Text = "Regeln",
             Font = new Font(Program.MontserratMediumItalic, 30F * ClientSize.Height / 1080, FontStyle.Bold, GraphicsUnit.Pixel),
             BackColor = Color.Gray,
             FlatStyle = FlatStyle.Flat,
             Cursor = Cursors.Hand
         };
-        settingsButton.Click += (_, _) => new RulesForm().ShowDialog(this);
-        Controls.Add(settingsButton);
+        rulesButton.Location = new Point(ClientSize.Width - rulesButton.Width - 20,
+            ClientSize.Height - rulesButton.Height - 20);
+        rulesButton.Click += (_, _) => new SettingsForm().ShowDialog(this);
+        Controls.Add(rulesButton);
     }
 
     private void StartButton_Click(object sender, EventArgs e)

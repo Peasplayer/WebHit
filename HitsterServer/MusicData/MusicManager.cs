@@ -7,10 +7,10 @@ namespace HitsterServer.MusicData;
 public class MusicManager
 {
     private static DateTime _time;
-    private static List<TrackData> _tracks;
-    private static List<string> _usedTracks = new List<string>();
+    private static List<TrackData> _tracks = new ();
+    private static List<string> _usedTracks = new ();
     
-    public static async Task<List<TrackData>> GetTracks()
+    public static async Task<List<TrackData>> LoadTracks()
     {
         if (_time + TimeSpan.FromMinutes(15) < DateTime.Now || _tracks.Count == 0)
         {
@@ -18,7 +18,7 @@ public class MusicManager
             using (var client = new HttpClient())
             {
                 var rawApiData = //await new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("HitsterServer.json.txt")).ReadToEndAsync();
-                await client.GetStringAsync("https://api.deezer.com/playlist/14906778801/");
+                await client.GetStringAsync($"https://api.deezer.com/playlist/{Packs[Settings.CurrentSettings.Pack]}/");
                 _time = DateTime.Now;
 
                 var rawTrackData = JsonConvert.DeserializeAnonymousType(rawApiData, new
@@ -47,7 +47,7 @@ public class MusicManager
     private const int ResultCount = 25;
     public static async Task<TrackData> GetRandomTrack()
     {
-        var tracks = await GetTracks();
+        var tracks = await LoadTracks();
         var randomTrackIndex = Random.Shared.Next(tracks.Count);
         var randomTrack = tracks[randomTrackIndex];
         tracks.RemoveAt(randomTrackIndex);
@@ -65,22 +65,27 @@ public class MusicManager
             var response = JsonConvert.DeserializeAnonymousType(await client.GetStringAsync(
                     $"https://api.discogs.com/database/search?artist={randomTrack.Artist}" +
                     $"&release_title={randomTrack.Name}&per_page={ResultCount}"), 
-                new { results = Array.Empty<DcResults>() });
+                new { results = new[] { new { year = "" } } });
                 
             var releaseYears = response.results.ToList().ConvertAll(r =>
-                r.Year == null ? int.MaxValue : Convert.ToInt32(r.Year));
+                r.year == null ? int.MaxValue : Convert.ToInt32(r.year));
             if (releaseYears.Count == 0)
             {
                 response = JsonConvert.DeserializeAnonymousType(await client.GetStringAsync(
                         $"https://api.discogs.com/database/search?query={randomTrack.Name} - {randomTrack.Artist}"
                         + $"&type=release&per_page={ResultCount}"), 
-                    new { results = Array.Empty<DcResults>() });
+                    new { results = new[] { new { year = "" } } });
                 
                 releaseYears = response.results.ToList().ConvertAll(r =>
-                    r.Year == null ? int.MaxValue : Convert.ToInt32(r.Year));
+                    r.year == null ? int.MaxValue : Convert.ToInt32(r.year));
             }
             
             releaseYears.Sort();
+            
+            // Falls kein Jahr emittelt werden kann, wird ein anderer Song verwendet
+            if (releaseYears.Count == 0 || releaseYears[0] == int.MaxValue)
+                return await GetRandomTrack();
+            
             randomTrack.ReleaseYear = releaseYears[0];
         }
         catch (HttpRequestException _)
@@ -92,17 +97,7 @@ public class MusicManager
         
         _usedTracks.Add(randomTrack.Id);
         
-        // Falls kein Jahr emittelt werden kann, wird ein anderer Song verwendet
-        if (randomTrack.ReleaseYear == int.MaxValue)
-            return await GetRandomTrack();
-        
         return randomTrack;
-    }
-    
-    private struct DcResults
-    {
-        [JsonProperty("year")]
-        public string? Year;
     }
 
     public static void ResetUsedTracks()
@@ -110,4 +105,21 @@ public class MusicManager
         _usedTracks.Clear();
         _tracks.Clear();
     }
+    
+    public static readonly string[] Packs = [
+        "14906778801", // Standard
+        "14907501761", // Summer Party
+        "14907501521", // Schlager Party
+        "14907501981", // Guilty Pleasures
+        "14907500801", // Bayern1
+        "14907500701", // Soundtracks
+        "14907500521", // Bingo-Pack
+        "14907500301", // Christmas
+        "14907500061", // Rock
+        "14907499761", // Celebration
+        "14907499261", // Platinum Edition
+        "14907498921", // 100% US
+        "14907498721", // Hip Hop
+        "14907501081", // US-Pack
+    ];
 }

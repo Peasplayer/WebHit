@@ -22,12 +22,12 @@ public partial class Form1 : ResizeForm
 
         OwnTimeline = new Timeline();
         OwnTimeline.SetPlayer(Player.LocalPlayer);
-        RegisterResizeControl(OwnTimeline, new SizeF(30, 3.5f), new PointF(1, 1), OwnTimeline.AfterResize);
+        RegisterResizeControl(OwnTimeline, new SizeF(30, 4f), new PointF(1, 1), OwnTimeline.AfterResize);
         Controls.Add(OwnTimeline);
 
         OtherTimeline = new Timeline();
         OtherTimeline.SetPlayer(Player.AllPlayers.Find(p => p.Id != Player.LocalPlayer.Id));
-        RegisterResizeControl(OtherTimeline, new SizeF(30, 3.5f), new PointF(1, 10), OtherTimeline.AfterResize);
+        RegisterResizeControl(OtherTimeline, new SizeF(30, 4f), new PointF(1, 10), OtherTimeline.AfterResize);
         Controls.Add(OtherTimeline);
 
         PlayerArea = new FlowLayoutPanel()
@@ -45,7 +45,7 @@ public partial class Form1 : ResizeForm
         //Button zum überspringen eines Liedes
         skipButton = new Button()
         {
-            Text = "Lied überspringen (1 Token)",
+            Text = "Lied überspringen (1)",
             Visible = false,
             BackColor = Color.Orange,
             FlatStyle = FlatStyle.Flat
@@ -65,17 +65,17 @@ public partial class Form1 : ResizeForm
         //Button zum Kaufen eines Liedes
         BuyTrackButton = new Button()
         {
-            Text = "Lied kaufen (3 Tokens)",
+            Text = $"Lied kaufen ({Settings.CurrentSettings.SongPrice})",
             Visible = true,
             BackColor = Color.LightGreen,
             FlatStyle = FlatStyle.Flat
         };
         BuyTrackButton.Click += (_, _) =>
         {
-            if (Player.LocalPlayer.Tokens >= 3)
+            if (Player.LocalPlayer.Tokens >= Settings.CurrentSettings.SongPrice)
                 NetworkManager.RpcBuyTrack();
             else
-                MessageBox.Show("Du hast nicht genug Tokens! Du brauchst 3.", "Achtung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"Du hast nicht genug Tokens!\nDu brauchst {Settings.CurrentSettings.SongPrice}.", "Achtung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         };
         RegisterResizeControl(BuyTrackButton, new SizeF(6f, 1.5f), new PointF(1f, 8.2f), () => 
         {

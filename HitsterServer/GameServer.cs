@@ -140,11 +140,19 @@ public class GameServer
             {
                 if (!client.IsHost)
                     return;
+                
+                var packet = JsonConvert.DeserializeObject<StartPacket>(msg);
+                if (packet == null)
+                {
+                    FleckLog.Warn($"<{client.Id}> Malformed Packet received!");
+                    return;
+                }
 
+                Settings.CurrentSettings = packet.Settings;
                 GameIsStarted = true;
                 MusicManager.ResetUsedTracks();
 
-                SendPacketEveryone(rawPacket);
+                SendPacketEveryone(packet);
                 foreach (var c in Clients)
                 {
                     SendPacketEveryone(new TrackPacket(await MusicManager.GetRandomTrack(), c.Id));
@@ -161,7 +169,7 @@ public class GameServer
                     return;
                 
                 SendPacketEveryone(rawPacket);
-                await Task.Delay(5000);
+                await Task.Delay(Settings.CurrentSettings.TokenPlaceTime * 1000);
                 SendPacketEveryone(new Packet(PacketType.Reveal));
                 await Task.Delay(5000);
 

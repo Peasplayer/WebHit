@@ -7,7 +7,7 @@ public partial class Lobby : ResizeForm
     public static Lobby? Instance { get; private set; }
     
     private Button StartButton { get; }
-    private Button RulesButton { get; }
+    private Button SettingsButton { get; }
     private List<PlayerCard> Cards { get; }
     
     public Lobby()
@@ -31,6 +31,21 @@ public partial class Lobby : ResizeForm
             StartButton.Font = new Font(Program.MontserratBold, Math.Max(StartButton.Height * 0.8f, 1), FontStyle.Bold, GraphicsUnit.Pixel);
         });
         
+        //Button um zu den Einstellungen zu kommen
+        SettingsButton = new Button
+        {
+            Cursor = Cursors.Hand,
+            Text = "Einstellungen",
+            Visible = false 
+        };
+        SettingsButton.Click += (_, _) => new SettingsForm().ShowDialog(this);
+        Controls.Add(SettingsButton);
+        //Wird genau unter dem Start Button plazier egal wie groß das Forms ist
+        RegisterResizeControl(SettingsButton, new SizeF(5, 1), new PointF(13.5f, 15.5f), () =>
+        {
+            SettingsButton.Font = new Font(Program.MontserratBold, Math.Max(SettingsButton.Height * 0.6f, 1), FontStyle.Bold, GraphicsUnit.Pixel);
+        });
+        
         Cards = new List<PlayerCard>();
 
         for (int i = 0; i < 6; i++)
@@ -49,6 +64,7 @@ public partial class Lobby : ResizeForm
     {
         StartButton.Visible = Player.LocalPlayer?.IsHost ?? false;
         StartButton.Enabled = Player.AllPlayers.Count >= 2;
+        SettingsButton.Visible = Player.LocalPlayer?.IsHost ?? false;
         for (int i = 0; i < 6; i++)
         {
             var card = Cards[i];

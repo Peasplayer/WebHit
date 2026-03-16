@@ -49,6 +49,7 @@ public class Player
     public TrackData? CurrentTrack { get; private set; }
     public Tuple<string, string>? CurrentTrackGuess { get; private set; }
     public int Tokens { get; private set; }
+    private bool _isGuessing;
     
     public Player(int id, string name, bool isHost)
     {
@@ -56,7 +57,7 @@ public class Player
         Name = name;
         IsHost = isHost;
         AllTracks = new List<TrackData>();
-        Tokens = 2;
+        Tokens = Math.Min(Settings.CurrentSettings.StartTokens, Settings.CurrentSettings.MaxTokens);
         
         AddPlayer(this);
     }
@@ -70,7 +71,7 @@ public class Player
     public void AddTokens(int tokens)
     {
         var newBalance = Tokens + tokens;
-        if (newBalance < 0 || newBalance > 5)
+        if (newBalance < 0 || newBalance > Settings.CurrentSettings.MaxTokens)
             return;
         Tokens = newBalance;
         PlayerDataChanged?.Invoke();
@@ -83,7 +84,20 @@ public class Player
             if (AllTracks.Count != 0)
             {
                 CurrentTrack = track;
+                _isGuessing = true;
                 Form1.PlayTrack(track);
+
+                Task.Run(() =>
+                {
+                    var timeout = 0;
+                    while (_isGuessing && timeout <= Settings.CurrentSettings.GuessTime)
+                    {
+                        timeout++;
+                        Task.Delay(1000).Wait();
+                    }
+                    if (_isGuessing)
+                        ConfirmTrack();
+                });
             }
             AllTracks.Add(track);
         }
@@ -109,6 +123,12 @@ public class Player
         Timeline.UpdateTimeline(this);
     }
 
+    public void ConfirmTrack()
+    {
+        _isGuessing = false;
+        NetworkManager.RpcConfirmTrack();
+}
+
     public void RevealCurrentTrack()
     {
         if (CurrentTrack == null)
@@ -126,7 +146,7 @@ public class Player
         CurrentTrackGuess = null;
     }
     //methode zum entfernen einer Karte
-    public void DiscradCurrentTrack()
+    public void DiscardCurrentTrack()
     {
         if (CurrentTrack != null)
         {

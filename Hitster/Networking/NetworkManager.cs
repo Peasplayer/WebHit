@@ -118,6 +118,16 @@ public class NetworkManager
                 }
                 case PacketType.Start:
                 {
+              
+                    var startPacket = JsonConvert.DeserializeObject<StartPacket>(msg);
+                    if (startPacket == null)
+                    {
+                        Console.WriteLine("Received malformed packet!");
+                        return;
+                    }
+
+                    Settings.CurrentSettings = startPacket.Settings;
+                    
                     Lobby.Instance?.BeginInvoke(() =>
                     {
                         var form = new Form1();
@@ -223,7 +233,7 @@ public class NetworkManager
                 }
                 case PacketType.SkipTrack:
                 {
-                    Player.CurrentPlayer?.DiscradCurrentTrack();
+                    Player.CurrentPlayer?.DiscardCurrentTrack();
                     break;
                 }
             }
@@ -234,13 +244,14 @@ public class NetworkManager
         }
     }
 
-    private static void SendPacket(Packet packet) {
-        _client.Send(JsonConvert.SerializeObject(packet));
+    private static void SendPacket(Packet packet)
+    {
+        _client?.Send(JsonConvert.SerializeObject(packet));
     }
 
     public static void RpcStart()
     {
-        SendPacket(new Packet(PacketType.Start));
+        SendPacket(new StartPacket(Settings.CurrentSettings));
     }
     
     public static void RpcConfirmTrack()
