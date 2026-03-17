@@ -118,6 +118,7 @@ public partial class MenuForm : Form
             MessageBox.Show("Bitte Name und IP eingeben!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);  //Warnung fals IP oder Name leer ist
             return;
         }
+        startButton.Enabled = false;
 
         Task.Run(() =>
         {
@@ -127,13 +128,18 @@ public partial class MenuForm : Form
             }
             catch (Exception ex)
             {
-                Invoke(() => MessageBox.Show($"Server nicht erreichbar!\n{ex.Message}", 
-                    "Verbindungsfehler", MessageBoxButtons.OK, MessageBoxIcon.Error));
+                Invoke(() =>
+                {
+                    startButton.Enabled = true;
+                    MessageBox.Show($"Server nicht erreichbar!\n{ex.Message}",
+                        "Verbindungsfehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                });
                 return;
             }
 
             Invoke(() =>
             {
+                startButton.Enabled = true;
                 var lobby = new Lobby();
                 lobby.Location = Location;
                 lobby.Show();

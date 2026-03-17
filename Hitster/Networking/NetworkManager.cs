@@ -51,7 +51,7 @@ public class NetworkManager
 
     public static void Disconnect(bool normal = false)
     {
-        _client?.Stop(normal ? WebSocketCloseStatus.PolicyViolation : WebSocketCloseStatus.Empty, "STOP");
+        _client?.Stop(normal ? WebSocketCloseStatus.PolicyViolation : WebSocketCloseStatus.NormalClosure, "STOP");
     }
 
     private static void HandlePacket(string msg)
@@ -276,9 +276,8 @@ public class NetworkManager
                         MessageBox.Show(
                             $"{(Player.LocalPlayer == player ? "Du hast" : player.Name + " hat")} gewonnen!",
                             "Hitster Won", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        NetworkManager.Disconnect(true);
+                        Disconnect(true);
                     });
-                    //NetworkManager.Disconnect(true);
                     break;
                 }
                 case PacketType.SkipTrack:
