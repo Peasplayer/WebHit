@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using Fleck;
+using HitsterServer.Packets;
 using Newtonsoft.Json;
 
 namespace HitsterServer.MusicData;
@@ -15,14 +16,17 @@ public class MusicManager
         //Lieder werden neu geladen wenn die Liste leer ist oder die Lieder älter als 15 min sind
         if (_time + TimeSpan.FromMinutes(15) < DateTime.Now || _tracks.Count == 0)
         {
-            FleckLog.Debug("Reloading expired track data...");
-            using (var client = new HttpClient())
+            try
             {
+                FleckLog.Debug("Reloading expired track data...");
+                using var client = new HttpClient();
                 //Lädt die Lieder aus der Deezer API
-                var rawApiData = //await new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("HitsterServer.json.txt")).ReadToEndAsync();
-                await client.GetStringAsync($"https://api.deezer.com/playlist/{Packs[Settings.CurrentSettings.Pack]}/");
+                var
+                    rawApiData = //await new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("HitsterServer.json.txt")).ReadToEndAsync();
+                        await client.GetStringAsync(
+                            $"https://api.deezer.com/playlist/{Packs[Settings.CurrentSettings.Pack]}/");
                 _time = DateTime.Now; //Speichert die Zeit wann abgefragt wurde
-                    
+
                 //Nur die relevanten Informationen Speichern
                 var rawTrackData = JsonConvert.DeserializeAnonymousType(rawApiData, new
                 {
@@ -40,8 +44,13 @@ public class MusicManager
                     if (!_usedTracks.Contains(track.id) && track.preview != "")
                         tracks.Add(new TrackData(track.id, track.title_short, track.artist.name, track.preview));
                 }
-                
+
                 return _tracks = tracks; //Die Liste neu überschrieben
+            }
+            catch (Exception e)
+            {
+                FleckLog.Error($"Error whilst loading tracks! {e.Message}\n{e.StackTrace}");
+                GameServer.Instance.SendPacketEveryone(new DisconnectPacket("Server kann keine Songs abrufen!"));
             }
         }
         
@@ -105,11 +114,10 @@ public class MusicManager
             
             randomTrack.ReleaseYear = releaseYears[0];
         }
-        catch (HttpRequestException _)
+        catch (HttpRequestException e)
         {
-            FleckLog.Error($"Error whilst getting random track ${randomTrack.Name} - {randomTrack.Artist}");
-            
-            throw;
+            FleckLog.Error($"Error whilst getting random track ${randomTrack.Name} - {randomTrack.Artist}\n{e.Message}\n{e.StackTrace}");
+            GameServer.Instance.SendPacketEveryone(new DisconnectPacket("Server kann keinen Song abrufen"));
         }
         
         return randomTrack;
