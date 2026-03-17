@@ -42,7 +42,7 @@ public class MusicManager
                 {
                     //Lied nur hinzufügen wenn Deezer eine Vorschau hat und das lied noch nicht verwendet wurde
                     if (!_usedTracks.Contains(track.id) && track.preview != "")
-                        tracks.Add(new TrackData(track.id, track.title_short, track.artist.name, track.preview));
+                        tracks.Add(new TrackData(track.id, track.title_short.Replace(" (Mono)", ""), track.artist.name, track.preview));
                 }
 
                 return _tracks = tracks; //Die Liste neu überschrieben
