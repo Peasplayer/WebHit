@@ -48,6 +48,12 @@ public class MusicManager
     public static async Task<TrackData> GetRandomTrack()
     {
         var tracks = await LoadTracks();
+        // Falls alle Songs verwendet wurden, werden dieselben Songs wiederverwendet
+        if (tracks.Count == 0)
+        {
+            ResetUsedTracks();
+            return await GetRandomTrack();
+        }
         var randomTrackIndex = Random.Shared.Next(tracks.Count);
         var randomTrack = tracks[randomTrackIndex];
         tracks.RemoveAt(randomTrackIndex);
@@ -94,8 +100,6 @@ public class MusicManager
             
             throw;
         }
-        
-        _usedTracks.Add(randomTrack.Id);
         
         return randomTrack;
     }

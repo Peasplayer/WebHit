@@ -18,6 +18,8 @@ public partial class MenuForm : Form
         //Fenstergröße Einstellen
         Width = Screen.PrimaryScreen.Bounds.Width / 3;
         Height = Width * 9 / 16;
+        BackgroundImage = Image.FromStream(Program.GetResource("Menu.png"));
+        BackgroundImageLayout = ImageLayout.Stretch;
 
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
@@ -35,8 +37,9 @@ public partial class MenuForm : Form
             Text = "Name",
             AutoSize = true,
             Font = new Font(Program.MontserratMediumItalic, 30F * ClientSize.Height / 1080, FontStyle.Bold, GraphicsUnit.Pixel),
-            ForeColor = Color.Black,
-            Location = new Point(900 * ClientSize.Width / 1920, 150 * ClientSize.Height / 1080)
+            ForeColor = Color.White,
+            BackColor = Color.Transparent,
+            Location = new Point(384 * ClientSize.Width / 1920, 150 * ClientSize.Height / 1080)
         };
         Controls.Add(nameLabel);
 
@@ -44,8 +47,9 @@ public partial class MenuForm : Form
         nameBox = new TextBox
         {
             Size = new Size(500 * ClientSize.Width / 1920, 80 * ClientSize.Height / 1080),
-            Location = new Point(900 * ClientSize.Width / 1920, 200 * ClientSize.Height / 1080),
-            Font = new Font(Program.MontserratBold, 40F * ClientSize.Height / 1080, FontStyle.Bold, GraphicsUnit.Pixel)
+            Location = new Point(384 * ClientSize.Width / 1920, 200 * ClientSize.Height / 1080),
+            Font = new Font(Program.MontserratBold, 40F * ClientSize.Height / 1080, FontStyle.Bold, GraphicsUnit.Pixel),
+            BackColor = Color.LightGray
         };
         nameBox.KeyDown += (_, e) =>
         {
@@ -60,8 +64,9 @@ public partial class MenuForm : Form
             Text = "Server",
             AutoSize = true,
             Font = new Font(Program.MontserratMediumItalic, 30F * ClientSize.Height / 1080, FontStyle.Bold, GraphicsUnit.Pixel),
-            ForeColor = Color.Black,
-            Location = new Point(900 * ClientSize.Width / 1920, 300 * ClientSize.Height / 1080)
+            ForeColor = Color.White,
+            BackColor = Color.Transparent,
+            Location = new Point(1036 * ClientSize.Width / 1920, 150 * ClientSize.Height / 1080)
         };
         Controls.Add(ipLabel);
         
@@ -69,9 +74,10 @@ public partial class MenuForm : Form
         ipBox = new TextBox
         {
             Size = new Size(500 * ClientSize.Width / 1920, 80 * ClientSize.Height / 1080),
-            Location = new Point(900 * ClientSize.Width / 1920, 350 * ClientSize.Height / 1080),
+            Location = new Point(1036 * ClientSize.Width / 1920, 200 * ClientSize.Height / 1080),
             Font = new Font(Program.MontserratBold, 40F * ClientSize.Height / 1080, FontStyle.Regular, GraphicsUnit.Pixel),
-            Text = "127.0.0.1"
+            Text = "127.0.0.1",
+            BackColor = Color.LightGray
         };
         Controls.Add(ipBox);
 
@@ -85,7 +91,7 @@ public partial class MenuForm : Form
             FlatStyle = FlatStyle.Flat,
             Cursor = Cursors.Hand
         };
-        startButton.Location = new Point((ClientSize.Width - startButton.Width) / 2, 750 * ClientSize.Height / 1080);
+        startButton.Location = new Point((ClientSize.Width - startButton.Width) / 2, 800 * ClientSize.Height / 1080);
         startButton.Click += StartButton_Click;
         Controls.Add(startButton);
 
@@ -95,13 +101,13 @@ public partial class MenuForm : Form
             Size = new Size(200 * ClientSize.Width / 1920, 80 * ClientSize.Height / 1080),
             Text = "Regeln",
             Font = new Font(Program.MontserratMediumItalic, 30F * ClientSize.Height / 1080, FontStyle.Bold, GraphicsUnit.Pixel),
-            BackColor = Color.Gray,
+            BackColor = Color.LightGray,
             FlatStyle = FlatStyle.Flat,
             Cursor = Cursors.Hand
         };
         rulesButton.Location = new Point(ClientSize.Width - rulesButton.Width - 20,
             ClientSize.Height - rulesButton.Height - 20);
-        rulesButton.Click += (_, _) => new SettingsForm().ShowDialog(this);
+        rulesButton.Click += (_, _) => new RulesForm().ShowDialog(this);
         Controls.Add(rulesButton);
     }
 

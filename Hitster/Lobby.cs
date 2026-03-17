@@ -36,6 +36,7 @@ public partial class Lobby : ResizeForm
         _instance = this;
         FormClosing += (_, _) =>
         {
+            Player.PlayerDataChanged -= _playerDataChanged;
             if (!_gameStarting)
             {
                 MenuForm.ShowForm();
@@ -44,6 +45,9 @@ public partial class Lobby : ResizeForm
         };
         FormClosed += (_, _) => _instance = null;
         WindowState = FormWindowState.Maximized; //macht Vollbild
+        ContentContainer.BackgroundImage = Image.FromStream(Program.GetResource("Lobby.png"));
+        ContentContainer.BackgroundImageLayout = ImageLayout.Stretch;
+        BackColor = Color.PaleTurquoise;
         InitializeComponent();
         
         StartButton = new Button
@@ -85,8 +89,13 @@ public partial class Lobby : ResizeForm
             RegisterResizeControl(card, new SizeF(6, 3), new PointF(6 + i % 3 * 7, 4 + (i / 3) * 4), card.Render);
         }
         _refreshPlayers();
-        
-        Player.PlayerDataChanged += () => Invoke(_instance._refreshPlayers);
+
+        Player.PlayerDataChanged += _playerDataChanged;
+    }
+
+    private static void _playerDataChanged()
+    {
+        _instance?.Invoke(_instance._refreshPlayers);
     }
 
     private void _refreshPlayers()
@@ -110,7 +119,7 @@ public partial class Lobby : ResizeForm
 
         public PlayerCard()
         {
-            BackColor = Color.BurlyWood;
+            BackColor = Color.PaleTurquoise;
             NameLabel = new Label();
             NameLabel.TextAlign = ContentAlignment.MiddleCenter;
             Controls.Add(NameLabel);
@@ -122,12 +131,12 @@ public partial class Lobby : ResizeForm
             if (Player != null)
             {
                 NameLabel.Text = Player.Name;
-                BackColor = Player.LocalPlayer == Player ? Color.RosyBrown : Color.Brown;
+                BackColor = Color.DarkTurquoise;
                 NameLabel.Visible = true;
             }
             else
             {
-                BackColor = Color.BurlyWood;
+                BackColor = Color.PaleTurquoise;
                 NameLabel.Visible = false;
             }
             
@@ -141,7 +150,7 @@ public partial class Lobby : ResizeForm
 
             NameLabel.Size = Size;
             NameLabel.Text = Player.Name + (Player.IsHost ? " [Host]" : "");
-            NameLabel.Font = new Font(Program.MontserratBold, Math.Max(Height * 0.2f, 1), FontStyle.Bold, GraphicsUnit.Pixel);
+            NameLabel.Font = new Font(Program.MontserratBold, Math.Max(Height * 0.2f, 1), Player.LocalPlayer == Player ? FontStyle.Underline : FontStyle.Regular, GraphicsUnit.Pixel);
         }
     }
 }

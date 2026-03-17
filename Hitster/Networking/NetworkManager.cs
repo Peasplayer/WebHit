@@ -14,6 +14,8 @@ public class NetworkManager
     {
         _client = new WebsocketClient(new Uri(address));
         _normalDisconnect = false;
+
+        Player.Reset();
         
         // Client wird konfiguriert
         _client.IsReconnectionEnabled = false;
@@ -25,7 +27,7 @@ public class NetworkManager
             Lobby.CloseForm();
             MenuForm.ShowForm();
             if (!_normalDisconnect)
-                MessageBox.Show("Die Verbindung mit dem Server wurde getrennt!");
+                MessageBox.Show("Die Verbindung mit dem Server wurde getrennt!", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
         });
         
         // Nachrichten empfangen und an den Listener weiterleiten

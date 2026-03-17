@@ -2,7 +2,7 @@
 
 public abstract class ResizeForm : Form
 {
-    private Panel _container;
+    public Panel ContentContainer { get; } //Container in dem alle Elemente plaziert werden
     private int widthUnit;
     private int heightUnit;
     private List<ResizeControl> _resizeControls = new ();
@@ -12,9 +12,10 @@ public abstract class ResizeForm : Form
     {
         DoubleBuffered = true;
         
-        _container = new Panel{BackColor = Color.Fuchsia};
-        _container.SendToBack();
-        Controls.Add(_container);
+        //Container erstellen und hinter allen anderen Elementen plazieren
+        ContentContainer = new Panel();
+        ContentContainer.SendToBack();
+        Controls.Add(ContentContainer);
         
         SizeChanged += (_, _) => _startRenderingForm();
         Resize += (_, _) => _startRenderingForm();
@@ -34,13 +35,14 @@ public abstract class ResizeForm : Form
         }
         
         // Setze Größe und Position des Containers zentriert im Fenster
-        _container.Width = calcWidth;
-        _container.Height = calcHeight;
-        _container.Location = new Point((ClientSize.Width - _container.Width) / 2, (ClientSize.Height - _container.Height) / 2);
-        _container.SendToBack();
+        ContentContainer.Width = calcWidth;
+        ContentContainer.Height = calcHeight;
+        ContentContainer.Location = new Point((ClientSize.Width - ContentContainer.Width) / 2, (ClientSize.Height - ContentContainer.Height) / 2);
+        ContentContainer.SendToBack();
         
-        widthUnit = _container.Width / 32;
-        heightUnit = _container.Height / 18;
+        //Maßen einer Grid Einheit berechnen
+        widthUnit = ContentContainer.Width / 32;
+        heightUnit = ContentContainer.Height / 18;
 
         foreach (var c in _resizeControls)
         {
@@ -68,7 +70,7 @@ public abstract class ResizeForm : Form
 
     private Point GetLocation(PointF location)
     {
-        return new Point((int)(_container.Location.X + location.X * widthUnit), (int)(_container.Location.Y + location.Y * heightUnit));
+        return new Point((int)(ContentContainer.Location.X + location.X * widthUnit), (int)(ContentContainer.Location.Y + location.Y * heightUnit));
     }
     
     private struct ResizeControl

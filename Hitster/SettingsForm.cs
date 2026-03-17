@@ -20,7 +20,7 @@ public partial class SettingsForm : Form
         var maxTokenLabel = new Label
         {
             Text = "Maximale Anzahl an Tokens", 
-            Location = new Point(20, 20), 
+            Location = new Point(20, 25), 
             AutoSize = true,
             Font = new Font(Program.MontserratSemiBold, 24, GraphicsUnit.Pixel)
         };
@@ -40,7 +40,7 @@ public partial class SettingsForm : Form
         var startTokeLabel = new Label
         {
             Text = "Anfangs Tokens",
-            Location = new Point(20, 80),
+            Location = new Point(20, 85),
             AutoSize = true,
             Font = new Font(Program.MontserratSemiBold, 24, GraphicsUnit.Pixel)
         };
@@ -60,7 +60,7 @@ public partial class SettingsForm : Form
         var requiredCardsLabel = new Label
         {
             Text = "Benötigte Karten für Sieg",
-            Location = new Point(20, 140),
+            Location = new Point(20, 145),
             AutoSize = true,
             Font = new Font(Program.MontserratSemiBold, 24, GraphicsUnit.Pixel)
         };
@@ -80,7 +80,7 @@ public partial class SettingsForm : Form
         var tokenPlaceTime = new Label
         {
             Text = "Zeit zum Token-Platzieren",
-            Location = new Point(20, 200),
+            Location = new Point(20, 205),
             AutoSize = true,
             Font = new Font(Program.MontserratSemiBold, 24, GraphicsUnit.Pixel)
         };
@@ -94,13 +94,21 @@ public partial class SettingsForm : Form
             Width = 100,
             Font = new Font(Program.MontserratBold, 24, GraphicsUnit.Pixel)
         };
+        var tokenPlaceTimeSeconds = new Label
+        {
+            Text = "Sek",
+            Location = new Point(510, 205),
+            AutoSize = true,
+            Font = new Font(Program.MontserratSemiBold, 24, GraphicsUnit.Pixel)
+        };
         Controls.Add(tokenPlaceTime);
         Controls.Add(tokenPlaceTimeBox);
+        Controls.Add(tokenPlaceTimeSeconds);
         
         var guessTimeLabel = new Label
         {
-            Text = "Rate-Zeit (Sek.)",
-            Location = new Point(20, 260),
+            Text = "Rate-Zeit",
+            Location = new Point(20, 265),
             AutoSize = true,
             Font = new Font(Program.MontserratSemiBold, 24, GraphicsUnit.Pixel)
         };
@@ -114,13 +122,21 @@ public partial class SettingsForm : Form
             Width = 100,
             Font = new Font(Program.MontserratBold, 24, GraphicsUnit.Pixel)
         };
+        var guessTimeSecondsLabel = new Label
+        {
+            Text = "Sek",
+            Location = new Point(510, 265),
+            AutoSize = true,
+            Font = new Font(Program.MontserratSemiBold, 24, GraphicsUnit.Pixel)
+        };
         Controls.Add(guessTimeLabel);
         Controls.Add(guessTimeBox);
+        Controls.Add(guessTimeSecondsLabel);
         
         var songPriceLabel = new Label
         {
             Text = "Preis für Lied-Kauf",
-            Location = new Point(20, 320),
+            Location = new Point(20, 325),
             AutoSize = true,
             Font = new Font(Program.MontserratSemiBold, 24, GraphicsUnit.Pixel)
         };
@@ -140,7 +156,7 @@ public partial class SettingsForm : Form
         var packLabel = new Label
         {
             Text = "Song-Pack",
-            Location = new Point(20, 380),
+            Location = new Point(20, 385),
             AutoSize = true,
             Font = new Font(Program.MontserratSemiBold, 24, GraphicsUnit.Pixel)
         };

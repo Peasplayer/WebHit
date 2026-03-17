@@ -42,11 +42,10 @@ public class Timeline : Panel
     public Timeline()
     {
         _timelines.Add(this);
-        BackColor = Color.Green;
+        BackColor = Color.DarkOliveGreen;
         _nameLabel = new Label
         {
             TextAlign = ContentAlignment.MiddleCenter,
-            BackColor = Color.Red,
             Location = new Point(0, 0)
         };
         Render();
@@ -231,9 +230,11 @@ public class Timeline : Panel
     {
         var slot = new Panel
         {
+            BackgroundImage = Image.FromStream(Program.GetResource("Pfeil.png")),
+            BackgroundImageLayout = ImageLayout.Stretch,
             Height = Height / 8,
             Width = (int)(Width / 50f),
-            BackColor = Color.AliceBlue,
+            BackColor = Color.Transparent
         };
         slot.Location = new Point(middle - slot.Width / 2, Height / 8);
         slot.Click += (_, _) =>
