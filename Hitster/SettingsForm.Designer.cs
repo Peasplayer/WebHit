@@ -38,7 +38,7 @@ partial class SettingsForm
         AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
         AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
         ClientSize = new System.Drawing.Size(800, 450);
-        Text = "SettingsForm";
+        Text = "Einstellungen";
         ResumeLayout(false);
     }
 

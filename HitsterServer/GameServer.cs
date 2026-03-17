@@ -9,57 +9,61 @@ public class GameServer
 {
     public static GameServer Instance { get; private set; }
 
-    public WebSocketServer Server { get; }
-    public List<ClientData> Clients { get; }
-    public int IdCounter { get; private set; }
-    public bool GameIsStarted;
-    public int CurrentPlayer { get; private set; }
+    private WebSocketServer Server { get; } //Der Websocket Server
+    private List<ClientData> Clients { get; } //Liste aller verbundenen Spieler
+    private int IdCounter { get; set; } //Zählt hoch um jedem Spieler eine eindeutige ID zu geben
+    private bool GameIsStarted; //Gibt an ob das Spiel bereits gestartet ist
+    private int CurrentPlayer { get; set; } //ID des Speilers der gerade am zug ist
     
     public GameServer(int port)
     {
         Instance = this;
         Clients = new List<ClientData>();
         
-        Server = new WebSocketServer("ws://0.0.0.0:"  + port);
+        Server = new WebSocketServer("ws://0.0.0.0:"  + port); //Starten der Websocket-Schnittstelle
         Server.Start(connection =>
         {
             connection.OnOpen = () =>
             {
-                Task.Run(() => OnConnect(connection));
+                Task.Run(() => OnConnect(connection)); //Wenn ein neuer Client sich verbindet
             };
             
             connection.OnClose = () =>
             {
-                Task.Run(() => OnDisconnect(connection));
+                Task.Run(() => OnDisconnect(connection)); //Wenn ein Client die verbindung abbricht 
             };
 
             connection.OnError = e =>
             {
-                Task.Run(() => OnDisconnect(connection, e));
+                Task.Run(() => OnDisconnect(connection, e)); //Wenn die verbidnung durch eine Fehler abgebrochen wird
             };
             
             connection.OnMessage = msg =>
             {
-                Task.Run(() => OnMessage(connection, msg));
+                Task.Run(() => OnMessage(connection, msg)); //Wenn der Client eine nachricht an den Server schickt
             };
         });
     }
 
     private void OnConnect(IWebSocketConnection connection) {
+        //Wenn das Spiel gestartet ist kann niemand mehr beitreten
         if (GameIsStarted)
         {
             SendPacketEveryone(new DisconnectPacket("Das Spiel hat bereits begonnen!"));
             return;
         }
 
+        //Maximal 6 Spieler dürfen beitreten
         if (Clients.Count >= 6)
         {
             SendPacketEveryone(new DisconnectPacket("Das Spiel ist bereits voll!"));
             return;
         }
 
+        //Neuer Client erstellen und in die Liste speichern
         var client = new ClientData(connection, IdCounter++);
         FleckLog.Info($"<{client.Id}> Connected");
+        //Der erste Spieler im Server wird Host
         if (Clients.Count == 0)
         {
             client.IsHost = true;
@@ -68,14 +72,16 @@ public class GameServer
         Clients.Add(client);
     }
 
+    //Wird aufgerufen wenn jemadn das Spiel verläst
     private void OnDisconnect(IWebSocketConnection connection, Exception? e = null) {
         var client = GetClient(connection);
         if (e != null)
             FleckLog.Error($"<{client.Id}> {e.Message}");
         FleckLog.Info($"<{client.Id}> Disconnected");
-        Clients.Remove(client);
-        SendPacketEveryone(new LeavePacket(client.Id));
+        Clients.Remove(client); //Spieler aus Liste entfernen
+        SendPacketEveryone(new LeavePacket(client.Id)); // Allen mitteilen, dass der Spieler weg ist
 
+        // Hat das Spiel bereits begonnen, wird es beendet
         if (GameIsStarted)
         {
             GameIsStarted = false;
@@ -84,6 +90,7 @@ public class GameServer
             return;
         }
         
+        //Wenn der Host in der Lobby das Spiel verlässt, wird der nächste Spieler Host
         if (client.IsHost && Clients.Count != 0)
         {
             Clients[0].IsHost = true;
@@ -104,6 +111,7 @@ public class GameServer
             return;
         }
 
+        // Verarbeitung der verschiedenen JSON-Packets
         switch (rawPacket.PacketType)
         {
             case PacketType.Handshake:
@@ -129,6 +137,7 @@ public class GameServer
                 SendPacket(new HandshakePacket(name, client.Id, client.IsHost), client);
 
                 Task.Delay(500).Wait();
+                // Spieler wird allen bekanntgegeben
                 foreach (var c in Clients)
                 {
                     if (c.Id != client.Id && c.Name != null)
@@ -279,6 +288,7 @@ public class GameServer
         }
     }
 
+    //Sendet Packets an bestimmte Personen
     private void SendPacket(Packet packet, params ClientData[] receivers)
     {
         var rawPacket = JsonConvert.SerializeObject(packet);
@@ -288,6 +298,7 @@ public class GameServer
         }
     }
     
+    //Sendet Packets an jeden
     public void SendPacketEveryone(Packet packet)
     {
         var rawPacket = JsonConvert.SerializeObject(packet);
@@ -297,6 +308,7 @@ public class GameServer
         }
     }
 
+    //Scuht das passende Client Objekt
     private ClientData GetClient(IWebSocketConnection connection)
     {
         var client = Clients.Find(c => connection.ConnectionInfo.Id == c.ConnId);

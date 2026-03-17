@@ -1,5 +1,5 @@
 namespace Hitster.Networking.Packets;
-
+//Alle Packet-Typen bzw. deren IDs
 public enum PacketType : uint
 {
     Handshake,

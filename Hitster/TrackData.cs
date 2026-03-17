@@ -1,5 +1,5 @@
 namespace Hitster;
-
+//Alle Daten eines Liedes
 public class TrackData
 {
     public string Id { get; }

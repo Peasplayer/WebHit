@@ -113,9 +113,9 @@ public partial class MenuForm : Form
 
     private void StartButton_Click(object? sender, EventArgs e)
     {
-        if (nameBox.Text.Trim() == "" || ipBox.Text.Trim() == "")
+        if (nameBox.Text.Trim() == "" || ipBox.Text.Trim() == "") //Fals es keinen Input gibt 
         {
-            MessageBox.Show("Bitte Name und IP eingeben!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("Bitte Name und IP eingeben!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);  //Warnung fals IP oder Name leer ist
             return;
         }
 
@@ -123,7 +123,7 @@ public partial class MenuForm : Form
         {
             try
             {
-                NetworkManager.Connect("ws://" + ipBox.Text + ":9443", nameBox.Text);
+                NetworkManager.Connect("ws://" + ipBox.Text + ":9443", nameBox.Text); //Kombiniert die eingabe der IP mir dem Port zum verbinden mit dem Server und übergibt den eingegebenen Namen
             }
             catch (Exception ex)
             {

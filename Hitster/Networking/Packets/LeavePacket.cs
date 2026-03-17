@@ -1,5 +1,5 @@
 namespace Hitster.Networking.Packets;
-
+//Packet beim verlassen des Servers
 public class LeavePacket : Packet
 {
     public int Player { get; }

@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using Hitster.Networking;
 
 namespace Hitster;
 
@@ -19,9 +18,10 @@ static class Program
         // see https://aka.ms/applicationconfiguration.
         ApplicationConfiguration.Initialize();
         Application.SetCompatibleTextRenderingDefault(true);
-        Application.Run(new MenuForm());
+        Application.Run(new MenuForm()); //Öffnet das Menü als Hauptform
     }
 
+    // Eigene Schriftarten
     public static FontFamily MontserratBold { get; } = GetFont("Montserrat-Bold");
     public static FontFamily MontserratMediumItalic { get; } = GetFont("Montserrat-MediumItalic");
     public static FontFamily MontserratSemiBold { get; } = GetFont("Montserrat-SemiBold");
@@ -43,6 +43,7 @@ static class Program
         }
     }
     
+    //Lädt die Streams der Embedded Resources
     public static Stream GetResource(string name)
     {
         var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Hitster.Resources." + name);
@@ -52,6 +53,7 @@ static class Program
         return stream;
     }
     
+    // Alogrithmus um Ähnlichkeiten zwischen Strings zu bestimmen
     // Quelle: https://medium.com/@tarakshah/this-article-explains-how-to-check-the-similarity-between-two-string-in-percentage-or-score-from-0-83e206bf6bf5
     public static double CompareStrings(string str1, string str2)
     {

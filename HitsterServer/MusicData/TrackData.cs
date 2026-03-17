@@ -1,5 +1,5 @@
 namespace HitsterServer.MusicData;
-
+//Alle Daten eines Liedes
 public struct TrackData
 {
     public string Id { get; }

@@ -1,5 +1,5 @@
 namespace Hitster.Networking.Packets;
-
+//Packet für das plazieren eines Tokens. Es wird übergeben wer und wohin der Token plaziert wurde
 public class TokenPlacePacket : Packet
 {
     public int Id { get; }

@@ -68,7 +68,7 @@ public class Timeline : Panel
         {
             var card = new Card(t);
             if (_player.CurrentTrack != t)
-                card.MarkAsConfirmed(false);
+                card.MarkAsRevealed(false);
             _cards.Add(card);
         }
         
@@ -83,7 +83,7 @@ public class Timeline : Panel
             (cardIndex != 0 && track.ReleaseYear < _cards[cardIndex - 1].Track.ReleaseYear) ||
             (cardIndex < _cards.Count - 1 &&
              track.ReleaseYear > _cards[cardIndex + 1].Track.ReleaseYear);
-            card.MarkAsConfirmed(wrong);
+            card.MarkAsRevealed(wrong); //Karte wird aufgedeckt und wird rot
         if (wrong)
         {
             // Lokaler Spieler sucht gesetzten, Token der richtig ist und übergibt den Track
@@ -135,7 +135,7 @@ public class Timeline : Panel
                 }
                 
                 if (!card.IsRevealed && _player.CurrentTrack != t)
-                    card.MarkAsConfirmed(false);
+                    card.MarkAsRevealed(false);
 
                 cards.Add(card);
             }

@@ -5,11 +5,12 @@ namespace Hitster;
 
 public sealed class Card : Panel
 {
-    public bool IsRevealed { get; private set; }
-    public bool IsCorrect { get; private set; }
-    public TrackData Track { get; }
+    public bool IsRevealed { get; private set; } //Gibt an ob die Karte bereits umgedreht wurde
+    public bool IsCorrect { get; private set; } //Gibt an ob die Karte richtig platziert war
+    public TrackData Track { get; } //Speichert die Informationen zu dem Lied
 
-    private Label _artist;
+    //Beschriftungen auf der Karte
+    private Label _artist; 
     private Label _year;
     private Label _title;
 
@@ -18,31 +19,38 @@ public sealed class Card : Panel
         Track = track;
 
         BackColor = Color.Black;
-        BackgroundImage = Image.FromStream(Program.GetResource("Karte.jpg"));
+        BackgroundImage = Image.FromStream(Program.GetResource("Karte.jpg")); //Lädt das Bild der Rückseite der Karte
         BackgroundImageLayout = ImageLayout.Zoom;
         BorderStyle = BorderStyle.FixedSingle;
 
+        //Fügt auf der Vorderseite Labels für die Informationen des Lieds hinzu
         _artist = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.Artist.Replace("&", "&&"), Visible = false };
         _year = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.ReleaseYear.ToString(), Visible = false };
         _title = new Label { TextAlign = ContentAlignment.MiddleCenter, Text = Track.Name.Replace("&", "&&"), Visible = false };
         Controls.AddRange(_artist, _year, _title);
 
+        //Dynamische anpassung der Größe
         void ResizeLabels()
         {
             if (Height == 0 || Width == 0)
                 return;
 
+            //Berechnet die größe für Künstler und Titel
             var smallSize = new Size((int)(Width * 0.9), (int)(Height * 0.35));
             var smallFontSize = (int)(smallSize.Height * 0.7 / 3);
             if (smallFontSize == 0)
                 return;
             
+            //Künstler wird oben und Titel unten platziert
             _artist.Location = new Point((int)(Width * 0.05), 0);
             _title.Location = new Point((int)(Width * 0.05), (int)(Height * 0.65));
             _artist.Size = _title.Size = smallSize;
+
+            //Schriftart und größe wird dynamisch angepasst
             _artist.Font = new Font(Program.MontserratSemiBold, smallFontSize, GraphicsUnit.Pixel);
             _title.Font = new Font(Program.MontserratMediumItalic, smallFontSize, GraphicsUnit.Pixel);
 
+            //Erscheinungsjahr wird groß mittig auf die Karte platziert
             _year.Location = new Point((int)(Width * 0.1), (int)(Height * 0.35));
             _year.Size = new Size((int)(Width * 0.8), (int)(Height * 0.3));
             _year.Font = new Font(Program.MontserratBold, (int)(_year.Size.Height * 0.85), GraphicsUnit.Pixel);
@@ -50,8 +58,11 @@ public sealed class Card : Panel
         
         ResizeLabels();
         SizeChanged += (_, _) => ResizeLabels();
+        
+        //Klick Event für das Raten der Karte
         Click += (_, _) =>
         {
+            //Es wird überprüft ob der Spieler raten darf
             if (!IsRevealed && Player.CurrentPlayer == Player.LocalPlayer && !Timeline.AllowTokenPlacement)
             {
                 // Wenn das Lied vom Lokalem Spieler ist kann er das Lied Raten
@@ -66,33 +77,40 @@ public sealed class Card : Panel
                         guessForm.ShowDialog();
                     }
 
-                    Player.LocalPlayer?.ConfirmTrack();
+                    Player.LocalPlayer?.ConfirmTrack(); //Position des Lieds wird bestätigt
                 }
             }
         };
     }
 
-    public void MarkAsConfirmed(bool wrong)
+    //Wird aufgerufen um eine Karte umzudrehen
+    public void MarkAsRevealed(bool wrong)
     {
         IsRevealed = true;
         IsCorrect = !wrong;
-        BackgroundImage = null;
-        BackColor = GetHashColor();
+        BackgroundImage = null; //Bild der Rückseite entfernen
+        BackColor = GetHashColor(); //Der Karte eine feste zufällige Farbe geben
+        
+        //Alle Informationen anzeigen
         _artist.Visible = true;
         _year.Visible = true;
         _title.Visible = true;
+        //Text wird rot wenn die Karte falsch platziert wurde
         if (wrong)
-            _artist.ForeColor = _year.ForeColor = _title.ForeColor = Color.Red;
+            _artist.ForeColor = _year.ForeColor = _title.ForeColor = Color.DarkRed;
         Invalidate();
     }
 
+    //Anhand der ID des Liedes wird eine Farbe generiert damit ein Lied immer dieselbe Farbe hat
     private Color GetHashColor()
     {
         var hash = 0;
+        //Erzeugt aus der ID ein Hash
         foreach (var c in Track.Id)
         {
             hash = c + ((hash << 5) - hash);
         }
+        //Wandelt den Hash in eine Hex Farbe um
         var colorStr = "#";
         for (var i = 0; i < 3; i++)
         {
@@ -101,12 +119,13 @@ public sealed class Card : Panel
         }
         
         var color = ColorTranslator.FromHtml(colorStr);
-        if (color.GetBrightness() < 0.4f)
+        if (color.GetBrightness() < 0.4f) //Ist die Farbe zu dunkel wird sie umgekehrt
             color = Color.FromArgb(color.A, 255 - color.R, 255 - color.G, 255 - color.B);
 
         return color;
     }
 
+    //Überschreibt die normale Paint Methode eines Panels
     protected override void OnPaint(PaintEventArgs e)
     {
         base.OnPaint(e);

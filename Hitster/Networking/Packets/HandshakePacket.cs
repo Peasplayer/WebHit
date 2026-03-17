@@ -1,5 +1,5 @@
 namespace Hitster.Networking.Packets;
-
+// Packet zur Eröffnung des Servers bei dem Name, Id, und ob die Person der Host ist übergeben wird
 public class HandshakePacket : Packet
 {
     public string Name { get; }

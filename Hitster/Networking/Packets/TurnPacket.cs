@@ -1,5 +1,5 @@
 namespace Hitster.Networking.Packets;
-
+//Packet welcher Spieler jetzt am Zug ist
 public class TurnPacket : Packet
 {
     public int Player { get; }

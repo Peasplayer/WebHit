@@ -64,7 +64,7 @@ public class NetworkManager
                 Console.WriteLine("Received malformed packet!");
                 return;
             }
-
+            //Switch case um bestimmte dinge auszuführen jenachdem welches Paket empfangen wurde
             switch (packet.PacketType)
             {
                 case PacketType.Handshake:
@@ -75,7 +75,7 @@ public class NetworkManager
                         Console.WriteLine("Received malformed packet!");
                         return;
                     }
-
+                    //Spieler wird mit den Daten die empfangen wurden erstellt
                     Console.WriteLine($"Got name ({handshakePacket.Name})[{handshakePacket.Id}]{(handshakePacket.IsHost ? " [Host]" : "")} assigned");
                     Player.SetLocalPlayer(new Player(handshakePacket.Id, handshakePacket.Name, handshakePacket.IsHost));
                     break;
@@ -97,19 +97,21 @@ public class NetworkManager
                 }
                 case PacketType.Track:
                 {
+                    //Ein neues lied wird empfangen
                     var trackPacket = JsonConvert.DeserializeObject<TrackPacket>(msg);
                     if (trackPacket == null)
                     {
                         Console.WriteLine("Received malformed packet!");
                         return;
                     }
-
+                    //Plaziert das Lied auf der Timline des Spielers
                     Console.WriteLine($"Got song ({trackPacket.Track.Name}) by ({trackPacket.Track.Artist})");
                     Player.GetPlayer(trackPacket.Id).PlaceCurrentTrack(0, trackPacket.Track);
                     break;
                 }
                 case PacketType.Join:
                 {
+                    //Ein neuer Spieler ist beigetreten
                     var joinPacket = JsonConvert.DeserializeObject<JoinPacket>(msg);
                     if (joinPacket == null)
                     {
@@ -117,27 +119,29 @@ public class NetworkManager
                         return;
                     }
 
-                    if (joinPacket.Id == Player.LocalPlayer.Id || Player.AllPlayers.Find(p => p.Id == joinPacket.Id) != null)
+                    if (joinPacket.Id == Player.LocalPlayer?.Id || Player.AllPlayers.Find(p => p.Id == joinPacket.Id) != null)
                         return;
-
+                    //Neuer Spieler erstellen 
                     Console.WriteLine($"Player {joinPacket.Name} ({joinPacket.Id}){(joinPacket.IsHost ? " [Host]" : "")} joined");
                     new Player(joinPacket.Id, joinPacket.Name, joinPacket.IsHost);
                     break;
                 }
                 case PacketType.Leave:
                 {
+                    //Wenn ein Spieler das Spiel verlässt
                     var leavePacket = JsonConvert.DeserializeObject<LeavePacket>(msg);
                     if (leavePacket == null)
                     {
                         Console.WriteLine("Received malformed packet!");
                         return;
                     }
-
+                    //Spieler wird entfernt
                     Player.RemovePlayer(Player.GetPlayer(leavePacket.Player));
                     break;
                 }
                 case PacketType.Host:
                 {
+                    //Wenn der Host verlässt wird ein neuer Spieler zum Host
                     var hostPacket = JsonConvert.DeserializeObject<HostPacket>(msg);
                     if (hostPacket == null)
                     {
@@ -150,14 +154,14 @@ public class NetworkManager
                 }
                 case PacketType.Start:
                 {
-              
+                    //Wenn der Host das Spiel startet
                     var startPacket = JsonConvert.DeserializeObject<StartPacket>(msg);
                     if (startPacket == null)
                     {
                         Console.WriteLine("Received malformed packet!");
                         return;
                     }
-
+                    //Einstellungen werden übernommen
                     Settings.CurrentSettings = startPacket.Settings;
                     //Spielform wird aufgerufen
                     Lobby.OpenGameForm();
@@ -169,47 +173,50 @@ public class NetworkManager
                     Form1.StopTimer();
                     Form1.StartTimer("Token Platzieren", Settings.CurrentSettings.TokenPlaceTime);
                     Player.TokenGuesses.Clear();
-                    Timeline.ToggleTokenPlacement(true);
+                    Timeline.ToggleTokenPlacement(true); //Andere Spieler können Token plazieren 
                     break;
                 }
                 case PacketType.TokenPlace:
                 {
+                    //Wenn ein Spieler einen Token gelegt hat
                     var tokenPacket = JsonConvert.DeserializeObject<TokenPlacePacket>(msg);
                     if (tokenPacket == null)
                     {
                         Console.WriteLine("Received malformed packet!");
                         return;
                     }
-
+                    //Wird ausgeführt wenn der Spieler noch keinen Token glegt hat
                     if (!Player.TokenGuesses.ContainsKey(tokenPacket.Id))
                     {
                         Player.TokenGuesses.Add(tokenPacket.Id, tokenPacket.Index);
-                        Player.GetPlayer(tokenPacket.Id).AddTokens(-1);
+                        Player.GetPlayer(tokenPacket.Id).AddTokens(-1); //Den ausgegebenen Token abziehen
                         Timeline.UpdateTimeline(Player.CurrentPlayer);
                     }
                     break;
                 }
                 case PacketType.TokenCorrect:
                 {
+                    //Wenn ein Token korekt plaziert wurde
                     var trackPacket = JsonConvert.DeserializeObject<TrackPacket>(msg);
                     if (trackPacket == null)
                     {
                         Console.WriteLine("Received malformed packet!");
                         return;
                     }
-
+                    //Spieler erhält die Karte auf seine Timeline
                     Player.GetPlayer(trackPacket.Id).AddTrack(trackPacket.Track);
                     break;
                 }
                 case PacketType.TokenAdd:
                 {
+                    //Ein Spieler erhält Tokens
                     var tokenPacket = JsonConvert.DeserializeObject<TokenAddPacket>(msg);
                     if (tokenPacket == null)
                     {
                         Console.WriteLine("Received malformed packet!");
                         return;
                     }
-
+                    //Dem richtigen Spieler wird die Menge an Tokens gegeben
                     Player.GetPlayer(tokenPacket.Id).AddTokens(tokenPacket.Amount);
                     break;
                 }
@@ -223,6 +230,7 @@ public class NetworkManager
                 }
                 case PacketType.SwitchTurn:
                 {
+                    //Nächster Speiler ist an der Reihe
                     var turnPacket = JsonConvert.DeserializeObject<TurnPacket>(msg);
                     if (turnPacket == null)
                     {
@@ -231,12 +239,14 @@ public class NetworkManager
                     }
 
                     Player.SetCurrentPlayer(Player.GetPlayer(turnPacket.Player));
+                    //Wenn nicht der lokale Spieler an der Reihe ist wird die Timline des Spielers der an der Reihe ist angezeigt
                     if (Player.CurrentPlayer != Player.LocalPlayer)
                         Form1.SetOtherTimeline(Player.CurrentPlayer);
                     break;
                 }
                 case PacketType.Move:
                 {
+                    //Ein Spieler verschiebt die Karte auf seiner Timeline
                     var movePacket = JsonConvert.DeserializeObject<MovePacket>(msg);
                     if (movePacket == null)
                     {
@@ -249,6 +259,7 @@ public class NetworkManager
                 }
                 case PacketType.Win:
                 {
+                    //Ein Spieler hat das Spiel gewonnen
                     var winPacket = JsonConvert.DeserializeObject<WinPacket>(msg);
                     if (winPacket == null)
                     {
@@ -261,6 +272,7 @@ public class NetworkManager
                 }
                 case PacketType.SkipTrack:
                 {
+                    //Ein Spieler überspringt ein Lied
                     Player.CurrentPlayer?.DiscardCurrentTrack();
                     break;
                 }
@@ -268,15 +280,18 @@ public class NetworkManager
         }
         catch (Exception e)
         {
+            //Fehler abfangen
             Console.WriteLine(e);
         }
     }
 
+    //Wandelt ein Packet Objekt in ein JSON Text um und sendet ihn
     private static void SendPacket(Packet packet)
     {
         _client?.Send(JsonConvert.SerializeObject(packet));
     }
 
+    //Methoden zum senden der jeweiligen Packets an den Server
     public static void RpcStart()
     {
         SendPacket(new StartPacket(Settings.CurrentSettings));
@@ -284,6 +299,7 @@ public class NetworkManager
     
     public static void RpcConfirmTrack()
     {
+        //Nur der Spieler der an der Reihe ist darf seine Karte umdrehen
         if (Player.CurrentPlayer.Id != Player.LocalPlayer.Id)
             return;
         SendPacket(new Packet(PacketType.Confirm));
@@ -291,6 +307,7 @@ public class NetworkManager
 
     public static void RpcMoveCurrentTrack(int index)
     {
+        //Nur der aktuelle Spieler darf Lieder verschieben
         if (Player.CurrentPlayer.Id != Player.LocalPlayer.Id)
             return;
         SendPacket(new MovePacket(index));
@@ -303,6 +320,7 @@ public class NetworkManager
 
     public static void RpcPlaceToken(int index)
     {
+        //Eigener Spieler darf bei sich keine Tokens legen
         if (Player.CurrentPlayer?.Id == Player.LocalPlayer.Id)
             return;
         SendPacket(new TokenPlacePacket(Player.LocalPlayer.Id, index));
@@ -320,6 +338,7 @@ public class NetworkManager
 
     public static void RpcSkipTrack()
     {
+        //Nur wenn der Spieler mindestens einen Token hat kann er ein Lied überspringen
         if (Player.CurrentPlayer?.Id != Player.LocalPlayer?.Id || Player.LocalPlayer?.Tokens < 1)
             return;
         SendPacket(new Packet(PacketType.SkipTrack));
@@ -327,6 +346,7 @@ public class NetworkManager
     
     public static void RpcBuyTrack()
     {
+        //Es kann nur ein Lied gekauft werden wenn man mindestens 3 Tokens hat
         if (Player.LocalPlayer?.Tokens < 3)
             return;
         SendPacket(new Packet(PacketType.BuyTrack));
