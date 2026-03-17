@@ -1,4 +1,5 @@
 namespace HitsterServer.Packets;
+//Packet das gesendet wird wenn die Karte bewegt wird
 
 public class MovePacket : Packet
 {

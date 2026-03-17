@@ -40,13 +40,13 @@ public partial class Form1 : ResizeForm
         //Die eigene Timeline erstellen und oben anzeigen
         OwnTimeline = new Timeline();
         OwnTimeline.SetPlayer(Player.LocalPlayer);
-        RegisterResizeControl(OwnTimeline, new SizeF(30, 4f), new PointF(1, 1), OwnTimeline.AfterResize);
+        RegisterResizeControl(OwnTimeline, new SizeF(30, 4f), new PointF(1, 1), OwnTimeline.Render);
         Controls.Add(OwnTimeline);
 
         //Die Timeline eines gegners erstellen und unten anzeigen lassen
         OtherTimeline = new Timeline();
         OtherTimeline.SetPlayer(Player.AllPlayers.Find(p => p.Id != Player.LocalPlayer.Id));
-        RegisterResizeControl(OtherTimeline, new SizeF(30, 4f), new PointF(1, 5.5f), OtherTimeline.AfterResize);
+        RegisterResizeControl(OtherTimeline, new SizeF(30, 4f), new PointF(1, 5.5f), OtherTimeline.Render);
         Controls.Add(OtherTimeline);
 
         //Timer anzeigen

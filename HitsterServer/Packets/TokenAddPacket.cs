@@ -1,4 +1,5 @@
 namespace HitsterServer.Packets;
+//Packet das gesendet wird wenn man Token verdient oder ausgibt mit Spieler und Anzahl der Token-Differenz
 
 public class TokenAddPacket : Packet
 {

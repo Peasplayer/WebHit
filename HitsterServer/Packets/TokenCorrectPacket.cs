@@ -1,4 +1,5 @@
 using HitsterServer.MusicData;
+//Packet das gesendet wird wenn man durch das einsetzen eines Tokens ein Lied richtig errät und dieses bekommt
 
 namespace HitsterServer.Packets;
 

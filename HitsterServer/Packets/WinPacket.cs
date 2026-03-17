@@ -1,4 +1,5 @@
 namespace HitsterServer.Packets;
+//Packet das gesendet wird wenn ein Spieler gewonnen hat
 
 public class WinPacket : Packet
 {

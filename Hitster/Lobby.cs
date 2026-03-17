@@ -5,7 +5,7 @@ namespace Hitster;
 public partial class Lobby : ResizeForm
 {
     private static Lobby? _instance { get; set; }
-    private static bool _gameStarting;
+    private static bool _gameStarting; // Ob sich die Lobby wegen Spielstart schließt
 
     public static void CloseForm(bool gameStarting = false)
     {
@@ -13,6 +13,7 @@ public partial class Lobby : ResizeForm
         _instance?.Close();
     }
 
+    //Wird aufgerufen wenn der Host das Spiel startet
     public static void OpenGameForm()
     {
         _instance?.BeginInvoke(() =>
@@ -29,7 +30,7 @@ public partial class Lobby : ResizeForm
     
     private Button StartButton { get; }
     private Button SettingsButton { get; }
-    private List<PlayerCard> Cards { get; }
+    private List<PlayerCard> Cards { get; } //Liste aller Spieler-Karten
     
     public Lobby()
     {
@@ -37,6 +38,7 @@ public partial class Lobby : ResizeForm
         FormClosing += (_, _) =>
         {
             Player.PlayerDataChanged -= _playerDataChanged;
+            //Wenn das Spiel nicht startet wird die Verbindung zum Server getrennt und das Hauptmenü geöffnet
             if (!_gameStarting)
             {
                 MenuForm.ShowForm();
@@ -50,6 +52,7 @@ public partial class Lobby : ResizeForm
         BackColor = Color.PaleTurquoise;
         InitializeComponent();
         
+        //Start- und Einstellungs-Button erstellen
         StartButton = new Button
         {
             Cursor = Cursors.Hand,
@@ -79,8 +82,9 @@ public partial class Lobby : ResizeForm
             SettingsButton.Font = new Font(Program.MontserratBold, Math.Max(SettingsButton.Height * 0.6f, 1), FontStyle.Bold, GraphicsUnit.Pixel);
         });
         
-        Cards = new List<PlayerCard>();
+        Cards = new List<PlayerCard>(); //Liste für die Anzeige welche Spieler bereits in der Lobby sind
 
+        //Generiert eine Anzeige aller Spieler die in der Lobby sind
         for (int i = 0; i < 6; i++)
         {
             var card = new PlayerCard();
@@ -100,8 +104,9 @@ public partial class Lobby : ResizeForm
 
     private void _refreshPlayers()
     {
+        //Buttons sind nur für den Host sichbar
         StartButton.Visible = Player.LocalPlayer?.IsHost ?? false;
-        StartButton.Enabled = Player.AllPlayers.Count >= 2;
+        StartButton.Enabled = Player.AllPlayers.Count >= 2; //Das Spiel kann nur gestartet werden wenn mindestens 2 Personen in der Lobby sind
         SettingsButton.Visible = Player.LocalPlayer?.IsHost ?? false;
         for (int i = 0; i < 6; i++)
         {
@@ -117,6 +122,7 @@ public partial class Lobby : ResizeForm
         
         private Label NameLabel { get; }
 
+        //Erstellt die Anzeige wenn noch kein Spieler dort ist
         public PlayerCard()
         {
             BackColor = Color.PaleTurquoise;
@@ -125,6 +131,7 @@ public partial class Lobby : ResizeForm
             Controls.Add(NameLabel);
         }
 
+        //Ein Spieler wird auf eine der Spieler Karten gesetzt
         public void SetPlayer(Player? player)
         {
             Player = player;
@@ -149,7 +156,7 @@ public partial class Lobby : ResizeForm
                 return;
 
             NameLabel.Size = Size;
-            NameLabel.Text = Player.Name + (Player.IsHost ? " [Host]" : "");
+            NameLabel.Text = Player.Name + (Player.IsHost ? " [Host]" : ""); //Der Host wird markiert
             NameLabel.Font = new Font(Program.MontserratBold, Math.Max(Height * 0.2f, 1), Player.LocalPlayer == Player ? FontStyle.Underline : FontStyle.Regular, GraphicsUnit.Pixel);
         }
     }

@@ -1,4 +1,5 @@
 namespace HitsterServer.Packets;
+//Packet zum beitreten des Servers
 
 public class JoinPacket : Packet
 {

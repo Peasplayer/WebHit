@@ -1,4 +1,5 @@
 namespace HitsterServer.Packets;
+//Packet das Sendet welcher Spieler der Host ist
 
 public class HostPacket : Packet
 {

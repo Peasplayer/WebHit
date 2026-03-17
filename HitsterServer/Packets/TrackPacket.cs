@@ -1,4 +1,5 @@
 using HitsterServer.MusicData;
+//Packet mit dem Lied und wer das Lied erhalten hat
 
 namespace HitsterServer.Packets;
 

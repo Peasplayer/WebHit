@@ -182,6 +182,7 @@ public partial class SettingsForm : Form
             FlatStyle = FlatStyle.Flat,
             Font = new Font(Program.MontserratBold, 24, GraphicsUnit.Pixel)
         };
+        //Beim klicken des Speicher-Buttons wird ein neues Settings-Objekt erstellt und dieses gespeichert
         saveButton.Click += (_, _) =>
         {
             Settings.CurrentSettings = new Settings((int)maxTokensBox.Value, (int)startTokensBox.Value,

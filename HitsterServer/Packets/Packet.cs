@@ -1,4 +1,5 @@
 namespace HitsterServer.Packets;
+//Grundstrucktur der Packets von dem alle Packets erben
 
 public class Packet
 {

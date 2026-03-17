@@ -1,4 +1,5 @@
 namespace HitsterServer.Packets;
+//Packet welcher Spieler jetzt am Zug ist
 
 public class TurnPacket : Packet
 {

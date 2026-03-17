@@ -1,4 +1,5 @@
 namespace HitsterServer.Packets;
+//Alle Packet-Typen bzw. deren IDs
 
 public enum PacketType : uint
 {
