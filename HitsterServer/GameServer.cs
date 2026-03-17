@@ -259,8 +259,6 @@ public class GameServer
                 
                 SendPacketEveryone(packet);
                 GameIsStarted = false;
-                foreach (var c in Clients)
-                    c.Connection.Close();
                 break;
             }
             case PacketType.SkipTrack:

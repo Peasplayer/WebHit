@@ -141,7 +141,7 @@ public partial class Form1 : ResizeForm
 
         //Buttons nur klickbar bzw. anzeigen wenn ein Spieler ihn auch nutzen kann
         buyTrackButton.Enabled = Player.LocalPlayer?.Tokens >= 3;
-        skipButton.Enabled = Player.LocalPlayer?.Tokens >= 1;
+        skipButton.Enabled = Player.LocalPlayer?.Tokens >= 1 && !Timeline.AllowTokenPlacement;
         skipButton.Visible = Player.CurrentPlayer?.Id == Player.LocalPlayer?.Id;
 
         //Für jeden Spieler eine Profil-Karte zu Beginn des Spieles zeichnen

@@ -14,6 +14,8 @@ public partial class SettingsForm : Form
         ForeColor = Color.White;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         StartPosition = FormStartPosition.CenterParent;
+        MaximizeBox = false;
+        MinimizeBox = false;
         Size = new Size(800, 640);
 
         // Eingebfelder und Labels für die einzelnen Einstellungen

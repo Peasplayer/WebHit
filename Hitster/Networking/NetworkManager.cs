@@ -268,6 +268,8 @@ public class NetworkManager
                     }
 
                     Form1.PlayerWon(Player.GetPlayer(winPacket.Player));
+                    _normalDisconnect = true;
+                    _client?.Dispose();
                     break;
                 }
                 case PacketType.SkipTrack:

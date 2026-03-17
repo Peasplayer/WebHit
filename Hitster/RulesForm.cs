@@ -23,7 +23,8 @@ public partial class RulesForm : Form
         this.Width = 900;
         this.Height = 650;
         this.FormBorderStyle = FormBorderStyle.FixedSingle;
-        this.MaximizeBox = false;
+        MaximizeBox = false;
+        MinimizeBox = false;
         this.StartPosition = FormStartPosition.CenterScreen;
 
         //Titel der Regeln
