@@ -35,6 +35,7 @@ public partial class Lobby : ResizeForm
     public Lobby()
     {
         _instance = this;
+        _gameStarting = false;
         FormClosing += (_, _) =>
         {
             Player.PlayerDataChanged -= _playerDataChanged;
@@ -42,7 +43,6 @@ public partial class Lobby : ResizeForm
             if (!_gameStarting)
             {
                 MenuForm.ShowForm();
-                NetworkManager.Disconnect();
             }
         };
         FormClosed += (_, _) => _instance = null;

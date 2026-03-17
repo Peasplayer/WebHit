@@ -32,7 +32,6 @@ public partial class Form1 : ResizeForm
             Timeline.Reset();
             _musicPlayer?.Stop();
             MenuForm.ShowForm();
-            NetworkManager.Disconnect();
         };
         FormClosed += (_, _) => _instance = null;
         InitializeComponent();
@@ -207,21 +206,11 @@ public partial class Form1 : ResizeForm
         }
     }
 
-    private void _PlayerWon(Player player)
-    {
-        MessageBox.Show($"{(Player.LocalPlayer == player ? "Du hast" : player.Name + " hat")} gewonnen!", "Hitster Won", MessageBoxButtons.OK, MessageBoxIcon.Information);
-    }
-
     //Statitsche Methoden um Funktionen der Form von außerhalb nutzen zu können
     
     public static void PlayTrack(TrackData track)
     {
         _instance?.Invoke(() => _instance._PlayTrack(track));
-    }
-
-    public static void PlayerWon(Player player)
-    {
-        _instance?.Invoke(() => _instance._PlayerWon(player));
     }
 
     public static void SetOtherTimeline(Player player)

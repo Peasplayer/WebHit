@@ -23,11 +23,14 @@ public class NetworkManager
         _client.ReconnectTimeout = TimeSpan.FromSeconds(5);
         _client.DisconnectionHappened.Subscribe(info =>
         {
-            Form1.CloseForm();
-            Lobby.CloseForm();
-            MenuForm.ShowForm();
-            if (!_normalDisconnect)
-                MessageBox.Show("Die Verbindung mit dem Server wurde getrennt!", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            if (!_normalDisconnect && info.CloseStatus == WebSocketCloseStatus.PolicyViolation)
+            {
+                Form1.CloseForm();
+                Lobby.CloseForm();
+                MenuForm.ShowForm();
+                MessageBox.Show("Die Verbindung mit dem Server wurde getrennt!", "Information", MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
         });
         
         // Nachrichten empfangen und an den Listener weiterleiten
@@ -46,9 +49,9 @@ public class NetworkManager
         SendPacket(new HandshakePacket(name));
     }
 
-    public static void Disconnect()
+    public static void Disconnect(bool normal = false)
     {
-        _client?.Dispose();
+        _client?.Stop(normal ? WebSocketCloseStatus.PolicyViolation : WebSocketCloseStatus.Empty, "STOP");
     }
 
     private static void HandlePacket(string msg)
@@ -267,9 +270,15 @@ public class NetworkManager
                         return;
                     }
 
-                    Form1.PlayerWon(Player.GetPlayer(winPacket.Player));
-                    _normalDisconnect = true;
-                    _client?.Dispose();
+                    var player = (Player.GetPlayer(winPacket.Player));
+                    Task.Run(() =>
+                    {
+                        MessageBox.Show(
+                            $"{(Player.LocalPlayer == player ? "Du hast" : player.Name + " hat")} gewonnen!",
+                            "Hitster Won", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        NetworkManager.Disconnect(true);
+                    });
+                    //NetworkManager.Disconnect(true);
                     break;
                 }
                 case PacketType.SkipTrack:

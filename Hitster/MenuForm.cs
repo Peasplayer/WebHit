@@ -144,6 +144,7 @@ public partial class MenuForm : Form
 
     public static void ShowForm()
     {
+        NetworkManager.Disconnect();
         _instance?.Show();
     }
 }
